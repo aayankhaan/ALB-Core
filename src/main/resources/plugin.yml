@@ -1,4 +1,4 @@
-name: ALB CORE
+name: "ALBCore"
 version: '${version}'
 main: com.aayan.albcore.ALBCore
 api-version: '1.21'
