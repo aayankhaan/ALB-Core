@@ -2,13 +2,14 @@ package com.aayan.albcore.utils
 
 import net.kyori.adventure.title.Title
 import org.bukkit.Bukkit
+import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import java.time.Duration
 
 object MessageUtil {
 
-    fun send(player: Player, text: String) {
-        player.sendMessage(ColorUtil.parse(text))
+    fun send(sender: CommandSender, text: String) {
+        sender.sendMessage(ColorUtil.parse(text))
     }
 
     fun sendTitle(player: Player, title: String, subtitle: String, fadeIn: Long = 500, Stay: Long = 3000, fadeOut: Long = 500) {

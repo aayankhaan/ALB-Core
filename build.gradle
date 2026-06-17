@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'org.jetbrains.kotlin.jvm'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'com.aayan'
@@ -49,4 +50,12 @@ processResources {
 }
 kotlin {
     jvmToolchain(21)
+}
+
+shadowJar {
+    archiveClassifier.set("")
+}
+
+build {
+    dependsOn shadowJar
 }

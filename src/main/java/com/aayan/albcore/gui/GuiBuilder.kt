@@ -11,13 +11,13 @@ class GuiBuilder(title: String, rows: Int) : InventoryHolder {
 
     internal val actions = mutableMapOf<Int, (Player) -> Unit>()
 
-    val inventory = Bukkit.createInventory(
+    private val guiInventory: Inventory = Bukkit.createInventory(
         this,
         rows * 9,
         ColorUtil.parse(title)
     )
 
-    override fun getInventory(): Inventory = inventory
+    override fun getInventory(): Inventory = guiInventory
 
     fun setItem(slot: Int, item: ItemStack, action: ((Player) -> Unit)? = null) = apply {
         inventory.setItem(slot, item)
