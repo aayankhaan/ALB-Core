@@ -4,8 +4,11 @@ import com.aayan.albcore.commands.ArgType
 import com.aayan.albcore.commands.CommandUtil
 import com.aayan.albcore.gui.GuiBuilder
 import com.aayan.albcore.gui.GuiListener
+import com.aayan.albcore.hooks.VaultHook
+
 import com.aayan.albcore.utils.ColorUtil
 import com.aayan.albcore.utils.MessageUtil
+import net.milkbowl.vault.economy.Economy
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -14,26 +17,89 @@ import org.bukkit.plugin.java.JavaPlugin
 class ALBCore : JavaPlugin() {
 
     override fun onEnable() {
+        VaultHook.setup(this)
         server.pluginManager.registerEvents(GuiListener(), this)
 
         registerTestGui()
         registerEcoCommand()
         registerPunishCommand()
-
-        CommandUtil.registerCommand(this, "test") {
-            description = "test"
-            playerOnly = true
-            playerOnlyMessage = "&comly players can type this msg."
-
-            action { sender, _ ->
-                MessageUtil.send(sender, "&cyou typed the command")
-            }
-        }
+        registerPayCommand()
 
     }
 
     override fun onDisable() {
         // Plugin shutdown logic
+    }
+
+    companion object {
+        lateinit var economy: Economy
+    }
+
+    private fun registerPayCommand() {
+        CommandUtil.registerCommand(this, "pay") {
+            description = "Command to pay money"
+            playerOnly = true
+            playerOnlyMessage = "&cOnly players can pay!"
+
+            onMissingArgs { s, _ -> MessageUtil.send(s, "&cUsage: /pay <player> <amount>") }
+
+            arg("target", ArgType.PLAYER) {
+                description = "The player you want to pay"
+                suggestPlayers()
+                onInvalid { s, raw -> MessageUtil.send(s, "&cPlayer '$raw' not found.") }
+            }
+
+            arg("amount", ArgType.DOUBLE) {
+                description = "The amount to pay"
+                suggest { listOf("100", "1000", "10000") }
+
+                onInvalid { s, raw ->
+                    MessageUtil.send(s, "&c'$raw' is not a valid amount.")
+                }
+
+                validate({ _, a -> a > 0 }) {
+                    MessageUtil.send(it, "&cAmount must be greater than 0.")
+                }
+
+                validate({ s, a ->
+                    s is Player && VaultHook.hasMoney(s, a)
+                }) {
+                    MessageUtil.send(
+                        it,
+                        if (VaultHook.isLoaded())
+                            "&cYou don't have enough money."
+                        else
+                            "&cEconomy is unavailable."
+                    )
+                }
+            }
+
+
+            action { s, a ->
+                val sender = s as Player
+                val target = a.player("target")
+                val amount = a.double("amount")
+
+                if (sender == target) {
+                    MessageUtil.send(sender, "&cYou cannot pay yourself!")
+                    return@action
+                }
+
+                if (!VaultHook.takeMoney(sender, amount)) {
+                    MessageUtil.send(sender, "&cEconomy transaction failed.")
+                    return@action
+                }
+
+                if (!VaultHook.giveMoney(target, amount)) {
+                    VaultHook.giveMoney(sender, amount) // refund
+                    MessageUtil.send(sender, "&cFailed to pay ${target.name}.")
+                    return@action
+                }
+
+                MessageUtil.send(sender, "&aYou paid &f${target.name} &a$amount coins.")
+                MessageUtil.send(target, "&aYou received &f$amount &acoins from &f${sender.name}.")
+            }
+        }
     }
 
     // ============================================================
@@ -91,22 +157,28 @@ class ALBCore : JavaPlugin() {
                     }
                 }
 
-                arg("amount", ArgType.LONG) {
+                arg("amount", ArgType.DOUBLE) {
                     description = "The amount of coins to add"
                     suggest { listOf("100", "1000", "10000") }
                     onInvalid { sender, raw ->
                         MessageUtil.send(sender, "&c'$raw' is not a valid amount.")
                     }
-                    validate({ _, amount -> amount > 0 }) {
+                    validate({ _, amount -> amount  > 0 }) {
+
                         MessageUtil.send(it, "&cAmount must be greater than 0.")
                     }
                 }
 
                 action { sender, args ->
                     val target = args.player("target")
-                    val amount = args.long("amount")
+                    val amount = args.double("amount")
+                    if (!VaultHook.isLoaded()) {
+                        MessageUtil.send(sender, "&cVault isn't installed/configured. Contact an administrator.")
+                        return@action
+                    }
                     MessageUtil.send(sender, "&aAdded &f$amount &acoins to &f${target.name}&a's balance.")
                     MessageUtil.send(target, "&aYou received &f$amount &acoins!")
+                    VaultHook.giveMoney(target,amount)
                 }
             }
 
@@ -126,7 +198,7 @@ class ALBCore : JavaPlugin() {
                     }
                 }
 
-                arg("amount", ArgType.LONG) {
+                arg("amount", ArgType.DOUBLE) {
                     suggest { listOf("100", "1000", "10000") }
                     validate({ _, amount -> amount > 0 }) {
                         MessageUtil.send(it, "&cAmount must be greater than 0.")
@@ -135,8 +207,22 @@ class ALBCore : JavaPlugin() {
 
                 action { sender, args ->
                     val target = args.player("target")
-                    val amount = args.long("amount")
-                    MessageUtil.send(sender, "&cRemoved &f$amount &ccoins from &f${target.name}&c's balance.")
+                    val amount = args.double("amount")
+
+                    if (!VaultHook.giveMoney(target, amount)) {
+                        MessageUtil.send(sender, "&cFailed to add money. Economy unavailable.")
+                        return@action
+                    }
+
+                    MessageUtil.send(
+                        sender,
+                        "&aAdded &f$amount &acoins to &f${target.name}&a's balance."
+                    )
+
+                    MessageUtil.send(
+                        target,
+                        "&aYou received &f$amount &acoins!"
+                    )
                 }
             }
 
@@ -158,7 +244,18 @@ class ALBCore : JavaPlugin() {
 
                 action { sender, args ->
                     val target = args.player("target")
-                    MessageUtil.send(sender, "&7${target.name}'s balance: &f1,000 coins")
+
+                    if (!VaultHook.isLoaded()) {
+                        MessageUtil.send(sender, "&cEconomy is unavailable.")
+                        return@action
+                    }
+
+                    val balance = VaultHook.getMoney(target)
+
+                    MessageUtil.send(
+                        sender,
+                        "&7${target.name}'s balance: &f$balance coins"
+                    )
                 }
             }
         }
