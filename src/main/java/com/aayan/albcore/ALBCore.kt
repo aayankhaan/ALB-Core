@@ -4,12 +4,11 @@ import com.aayan.albcore.commands.ArgType
 import com.aayan.albcore.commands.CommandUtil
 import com.aayan.albcore.gui.GuiBuilder
 import com.aayan.albcore.gui.GuiListener
+import com.aayan.albcore.hooks.PAPIExpansion
+import com.aayan.albcore.hooks.PAPIHook
 import com.aayan.albcore.hooks.VaultHook
+import com.aayan.albcore.utils.*
 
-import com.aayan.albcore.utils.ColorUtil
-import com.aayan.albcore.utils.ItemBuilder
-import com.aayan.albcore.utils.MessageUtil
-import net.milkbowl.vault.economy.Economy
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -17,15 +16,25 @@ import org.bukkit.plugin.java.JavaPlugin
 
 class ALBCore : JavaPlugin() {
 
+    companion object {
+        lateinit var instance: ALBCore
+            private set
+    }
+
     override fun onEnable() {
+        instance = this
         VaultHook.setup(this)
+        if (PAPIHook.setup(this)) {
+            PAPIExpansion().register()
+            registerPlaceHolder()
+        }
         server.pluginManager.registerEvents(GuiListener(), this)
 
+        registerShopGui()
         registerTestGui()
         registerEcoCommand()
         registerPunishCommand()
         registerPayCommand()
-
     }
 
     override fun onDisable() {
@@ -33,6 +42,48 @@ class ALBCore : JavaPlugin() {
     }
 
 
+    private fun registerPlaceHolder() {
+        logger.info("Alb Test PAPI has been registered")
+        PAPIExpansion.registerPAPI("test") {player -> NumberUtil.formatNumber(VaultHook.getMoney(player).toLong())}
+    }
+
+
+    private fun registerShopGui() {
+        CommandUtil.registerCommand(this, "shop") {
+            description = "Open the shop"
+            playerOnly = true
+            playerOnlyMessage = "&cOnly Player can access shop."
+
+            action { sender, _ ->
+                val player = sender as Player
+
+                GuiBuilder("&8Shop | %alb_test%\\\$", 3)
+                    .onOpen { SoundUtil.play(it,"minecraft:block.chest.open") }
+                    .onClose { SoundUtil.play(it,"minecraft:block.chest.open") }
+                    .refreshEvery(20)
+
+                    .setItem(13, { p ->
+                        ItemBuilder(Material.DIAMOND)
+                            .name(p, "Diamond")
+                            .lore(p, "&7Click to purchase", "&7Price: &f100")
+                            .glow()
+                            .build()
+                    }
+                    ) { p ->
+                        val m = VaultHook.getMoney(p)
+                        if (m < 100) {
+                            SoundUtil.play(p, "minecraft:entity.villager.no")
+                            MessageUtil.send(p,"&cYou Don't have enough money to buy it")
+                        } else {
+                            VaultHook.takeMoney(p, 100.0)
+                            p.inventory.addItem(ItemStack(Material.DIAMOND, 1))
+                            MessageUtil.send(p, "&aPurchased!")
+                        }
+                    }
+                    .open(player)
+            }
+        }
+    }
 
     private fun registerPayCommand() {
         CommandUtil.registerCommand(this, "pay") {
@@ -113,24 +164,27 @@ class ALBCore : JavaPlugin() {
             action { sender, _ ->
                 val player = sender as Player
 
-                GuiBuilder("&8Test Menu", 3)
-                    .setItem(13, {
+                GuiBuilder("&8Test Menu &c%alb_test%", 3)
+                    .onOpen { p -> SoundUtil.play(p,"minecraft:block.chest.open") }
+                    .onClose { p -> SoundUtil.play(p,"minecraft:block.chest.open") }
+                    .refreshEvery(20L)
+
+                    .setItem(13, { p ->
                         ItemBuilder(Material.DIAMOND)
-                            .name("&bDiamond")
-                            .lore("&7Click to purchase", "&7Price: &f100")
+                            .name(p,"&bDiamond")
+                            .lore(p,"&7Click to purchase", "&7Price: &f100")
                             .glow()
                             .build()
                     }
                     ) { p ->
                         MessageUtil.send(p, "&bYou clicked the diamond!")
                     }
-                    .setItem(11, {
+                    .setItem(11, { p ->
                         ItemBuilder(Material.GOLD_INGOT, 2)
-                            .name("&eJust here for decoration")
-                            .lore("&7test")
+                            .name(p, "&eHey %player_name%")
+                            .lore(p,"&7test %alb_test%")
                             .build()
-                    }
-                    )
+                    })
                     .open(player)
             }
         }

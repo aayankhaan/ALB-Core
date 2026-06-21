@@ -3,6 +3,7 @@ package com.aayan.albcore.utils
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
+import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
 
@@ -12,12 +13,12 @@ class ItemBuilder(material: Material, amount: Int = 1) {
     private val item = ItemStack(material, amount)
     private val meta = item.itemMeta ?: throw IllegalArgumentException("Item has no meta: $material")
 
-    fun name(name: String) = apply {
-        meta.displayName(ColorUtil.parse(name).decoration(TextDecoration.ITALIC, false))
+    fun name(player: Player, text: String) = apply {
+        meta.displayName(ColorUtil.parseWithPAPI(player, text).decoration(TextDecoration.ITALIC, false))
     }
 
-    fun lore(vararg lines: String) = apply {
-        meta.lore(lines.map { ColorUtil.parse(it).decoration(TextDecoration.ITALIC, false) })
+    fun lore(player: Player, vararg lines: String) = apply {
+        meta.lore(lines.map { ColorUtil.parseWithPAPI(player, it).decoration(TextDecoration.ITALIC, false) })
     }
 
     fun enchant(enchantment: Enchantment, level: Int) = apply {

@@ -6,7 +6,6 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
-import org.bukkit.scheduler.BukkitTask
 
 class GuiListener : Listener {
 
@@ -31,9 +30,10 @@ class GuiListener : Listener {
 
         if(holder !is GuiBuilder) return
 
-        val action = holder.onOpenAction ?: return
+        val player = event.player as? Player ?: return
 
-        action(event.player as Player)
+        holder.refresh()
+        holder.onOpenAction?.invoke(player)
     }
 
     @EventHandler

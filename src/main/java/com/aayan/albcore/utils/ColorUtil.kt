@@ -1,9 +1,11 @@
 package com.aayan.albcore.utils
 
+import com.aayan.albcore.hooks.PAPIHook
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
+import org.bukkit.entity.Player
 
 object ColorUtil {
 
@@ -16,6 +18,12 @@ object ColorUtil {
 
     fun parse(text: String): Component {
         val converted = convertLegacyToMiniMessage(text)
+        return miniMessage.deserialize(converted)
+    }
+
+    fun parseWithPAPI(player: Player, text: String): Component {
+        val withPapi  = PAPIHook.parse(player, text)
+        val converted = convertLegacyToMiniMessage(withPapi)
         return miniMessage.deserialize(converted)
     }
 
