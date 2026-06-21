@@ -7,6 +7,7 @@ import com.aayan.albcore.gui.GuiListener
 import com.aayan.albcore.hooks.VaultHook
 
 import com.aayan.albcore.utils.ColorUtil
+import com.aayan.albcore.utils.ItemBuilder
 import com.aayan.albcore.utils.MessageUtil
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Material
@@ -31,9 +32,7 @@ class ALBCore : JavaPlugin() {
         // Plugin shutdown logic
     }
 
-    companion object {
-        lateinit var economy: Economy
-    }
+
 
     private fun registerPayCommand() {
         CommandUtil.registerCommand(this, "pay") {
@@ -91,7 +90,7 @@ class ALBCore : JavaPlugin() {
                 }
 
                 if (!VaultHook.giveMoney(target, amount)) {
-                    VaultHook.giveMoney(sender, amount) // refund
+                    VaultHook.giveMoney(sender, amount)
                     MessageUtil.send(sender, "&cFailed to pay ${target.name}.")
                     return@action
                 }
@@ -115,10 +114,23 @@ class ALBCore : JavaPlugin() {
                 val player = sender as Player
 
                 GuiBuilder("&8Test Menu", 3)
-                    .setItem(13, ItemStack(Material.DIAMOND)) { p ->
+                    .setItem(13, {
+                        ItemBuilder(Material.DIAMOND)
+                            .name("&bDiamond")
+                            .lore("&7Click to purchase", "&7Price: &f100")
+                            .glow()
+                            .build()
+                    }
+                    ) { p ->
                         MessageUtil.send(p, "&bYou clicked the diamond!")
                     }
-                    .setItem(11, ItemStack(Material.GOLD_INGOT))
+                    .setItem(11, {
+                        ItemBuilder(Material.GOLD_INGOT, 2)
+                            .name("&eJust here for decoration")
+                            .lore("&7test")
+                            .build()
+                    }
+                    )
                     .open(player)
             }
         }
