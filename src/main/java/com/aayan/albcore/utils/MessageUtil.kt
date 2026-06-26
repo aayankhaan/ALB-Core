@@ -17,11 +17,13 @@ object MessageUtil {
         player.sendMessage(ColorUtil.parse(PAPIHook.parse(player,text)))
     }
 
-    fun sendTitle(player: Player, title: String, subtitle: String, fadeIn: Long = 500, Stay: Long = 3000, fadeOut: Long = 500) {
-        player.showTitle(Title.title(ColorUtil.parse(PAPIHook.parse(player,title)), ColorUtil.parse(subtitle), Title.Times.times(Duration.ofMillis(fadeIn),Duration.ofMillis(Stay),Duration.ofMillis(fadeOut))))
+    fun sendTitle(player: Player, title: String, subtitle: String, fadeIn: Long = 500, stay: Long = 3000, fadeOut: Long = 500) {
+        player.showTitle(Title.title(ColorUtil.parse(PAPIHook.parse(player,title)), ColorUtil.parse(PAPIHook.parse(player, subtitle)), Title.Times.times(Duration.ofMillis(fadeIn),Duration.ofMillis(stay),Duration.ofMillis(fadeOut))))
     }
 
     fun broadcast(text: String) {
-        Bukkit.broadcast(ColorUtil.parse(text))
+        Bukkit.getOnlinePlayers().forEach { player ->
+            player.sendMessage(ColorUtil.parse(PAPIHook.parse(player, text)))
+        }
     }
 }
