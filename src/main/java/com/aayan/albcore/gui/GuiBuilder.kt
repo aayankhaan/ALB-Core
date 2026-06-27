@@ -78,11 +78,15 @@ class GuiBuilder(private val title: String, private val rows: Int) : InventoryHo
     fun getItems(slots: IntRange): List<ItemStack> {
         return slots.mapNotNull { slot -> inventory.getItem(slot) }
     }
-
     fun refresh() = apply {
         val player = guiOwner ?: return@apply
+
+        val savedItems = interactiveSlots.associateWith { slot -> inventory.getItem(slot) }
         guiInventory.clear()
-        pageActions.clear()
+
+        savedItems.forEach { (slot, item) ->
+            if (item != null) guiInventory.setItem(slot, item)
+        }
 
         val ctx = PageContext(currentPage, pages.size, this)
 
