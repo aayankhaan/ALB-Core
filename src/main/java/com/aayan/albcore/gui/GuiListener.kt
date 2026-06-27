@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
+import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 
 class GuiListener : Listener {
@@ -14,10 +15,22 @@ class GuiListener : Listener {
         val holder = event.inventory.holder
         if (holder !is GuiBuilder) return
 
-        event.isCancelled = true
-
-        val player = event.whoClicked as? Player ?: return
         val slot = event.slot
+        val player = event.whoClicked as? Player ?: return
+
+        if (event.isShiftClick && event.rawSlot >= event.inventory.size) {
+            if (holder.interactiveSlots.isEmpty()) {
+                event.isCancelled = true
+                return
+            }
+            return
+        }
+
+        if (event.rawSlot >= event.inventory.size) return
+
+        if (slot in holder.interactiveSlots) return
+
+        event.isCancelled = true
 
         holder.actions[slot]?.invoke(player)
 
@@ -25,6 +38,20 @@ class GuiListener : Listener {
             val ctx = PageContext(holder.currentPage, holder.pages.size, holder)
             holder.pageActions[slot]?.invoke(player, ctx)
         }
+    }
+
+    @EventHandler
+    fun onDrag(event: InventoryDragEvent) {
+        val holder = event.inventory.holder
+        if (holder !is GuiBuilder) return
+
+        val guiSize = event.inventory.size
+        val touchedGuiSlots = event.rawSlots.filter { it < guiSize }
+
+        if (touchedGuiSlots.isEmpty()) return
+        if (touchedGuiSlots.all { it in holder.interactiveSlots }) return
+
+        event.isCancelled = true
     }
 
     @EventHandler

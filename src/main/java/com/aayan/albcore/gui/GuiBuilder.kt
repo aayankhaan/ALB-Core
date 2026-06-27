@@ -20,9 +20,11 @@ class GuiBuilder(private val title: String, private val rows: Int) : InventoryHo
 
     internal val pageActions = mutableMapOf<Int, (Player, PageContext) -> Unit>()
 
+    internal val interactiveSlots = mutableSetOf<Int>()
     internal var refreshTask: BukkitTask? = null
     internal var onOpenAction: ((Player) -> Unit)? = null
     internal var onCloseAction: ((Player) -> Unit)? = null
+
 
     private var guiInventory: Inventory = Bukkit.createInventory(this, rows * 9)
 
@@ -60,6 +62,22 @@ class GuiBuilder(private val title: String, private val rows: Int) : InventoryHo
 
     fun onOpen(action: (Player) -> Unit) = apply { onOpenAction = action }
     fun onClose(action: (Player) -> Unit) = apply { onCloseAction = action }
+
+    fun allowItemPlacement(vararg slots: Int) = apply {
+        interactiveSlots.addAll(slots.toList())
+    }
+
+    fun allowItemPlacement(slots: IntRange) = apply {
+        interactiveSlots.addAll(slots.toList())
+    }
+
+    fun getItems(vararg slots: Int): List<ItemStack> {
+        return slots.toList().mapNotNull { slot -> inventory.getItem(slot) }
+    }
+
+    fun getItems(slots: IntRange): List<ItemStack> {
+        return slots.mapNotNull { slot -> inventory.getItem(slot) }
+    }
 
     fun refresh() = apply {
         val player = guiOwner ?: return@apply
