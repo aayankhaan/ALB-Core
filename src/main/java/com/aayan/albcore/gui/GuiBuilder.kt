@@ -21,6 +21,7 @@ class GuiBuilder(private val title: String, private val rows: Int) : InventoryHo
     internal val pageActions = mutableMapOf<Int, (Player, PageContext) -> Unit>()
 
     internal val interactiveSlots = mutableSetOf<Int>()
+    internal val slotFilters = mutableMapOf<Int, (ItemStack) -> Boolean>()
     internal var refreshTask: BukkitTask? = null
     internal var onOpenAction: ((Player) -> Unit)? = null
     internal var onCloseAction: ((Player) -> Unit)? = null
@@ -63,12 +64,18 @@ class GuiBuilder(private val title: String, private val rows: Int) : InventoryHo
     fun onOpen(action: (Player) -> Unit) = apply { onOpenAction = action }
     fun onClose(action: (Player) -> Unit) = apply { onCloseAction = action }
 
-    fun allowItemPlacement(vararg slots: Int) = apply {
-        interactiveSlots.addAll(slots.toList())
+    fun allowItemPlacement(vararg slots: Int, filter: ((ItemStack) -> Boolean)? = null) = apply {
+        slots.forEach { slot ->
+            interactiveSlots.add(slot)
+            if (filter != null) slotFilters[slot] = filter
+        }
     }
 
-    fun allowItemPlacement(slots: IntRange) = apply {
-        interactiveSlots.addAll(slots.toList())
+    fun allowItemPlacement(slots: IntRange, filter: ((ItemStack) -> Boolean)? = null) = apply {
+        slots.forEach { slot ->
+            interactiveSlots.add(slot)
+            if (filter != null) slotFilters[slot] = filter
+        }
     }
 
     fun getItems(vararg slots: Int): List<ItemStack> {

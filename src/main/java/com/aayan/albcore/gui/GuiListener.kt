@@ -1,5 +1,6 @@
 package com.aayan.albcore.gui
 
+import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -18,17 +19,32 @@ class GuiListener : Listener {
         val slot = event.slot
         val player = event.whoClicked as? Player ?: return
 
-        if (event.isShiftClick && event.rawSlot >= event.inventory.size) {
-            if (holder.interactiveSlots.isEmpty()) {
-                event.isCancelled = true
-                return
+        if (event.rawSlot >= event.inventory.size) {
+            if (event.isShiftClick) {
+                if (holder.interactiveSlots.isEmpty()) {
+                    event.isCancelled = true
+                    return
+                }
+                val item = event.currentItem ?: return
+                val firstInteractiveSlot = holder.interactiveSlots.first()
+                val filter = holder.slotFilters[firstInteractiveSlot]
+                if (filter != null && !filter(item)) {
+                    event.isCancelled = true
+                }
             }
             return
         }
 
-        if (event.rawSlot >= event.inventory.size) return
-
-        if (slot in holder.interactiveSlots) return
+        if (slot in holder.interactiveSlots) {
+            val cursor = event.cursor
+            if (cursor.type != Material.AIR) {
+                val filter = holder.slotFilters[slot]
+                if (filter != null && !filter(cursor)) {
+                    event.isCancelled = true
+                }
+            }
+            return
+        }
 
         event.isCancelled = true
 
@@ -49,7 +65,11 @@ class GuiListener : Listener {
         val touchedGuiSlots = event.rawSlots.filter { it < guiSize }
 
         if (touchedGuiSlots.isEmpty()) return
-        if (touchedGuiSlots.all { it in holder.interactiveSlots }) return
+
+        if (touchedGuiSlots.all { slot ->
+                slot in holder.interactiveSlots &&
+                        holder.slotFilters[slot]?.invoke(event.oldCursor) != false
+            }) return
 
         event.isCancelled = true
     }
