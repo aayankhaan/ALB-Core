@@ -8,6 +8,8 @@ import com.aayan.albcore.gui.GuiListener
 import com.aayan.albcore.hooks.PAPIExpansion
 import com.aayan.albcore.hooks.PAPIHook
 import com.aayan.albcore.hooks.VaultHook
+import com.aayan.albcore.logging.DiscordColor
+import com.aayan.albcore.logging.DiscordLogger
 import com.aayan.albcore.utils.*
 
 import org.bukkit.Material
@@ -25,6 +27,10 @@ class ALBCore : JavaPlugin() {
     override fun onEnable() {
         instance = this
         VaultHook.setup(this)
+        DiscordLogger.setup("shop",
+            "https://discord.com/api/webhooks/1520225204331352074/hCAwE6vQCmr5FfhOvd5Va6-x9fMR09NpIl0w9aHyssx8NFBaDS-LtZwocbeVAbsTBjfO",
+            "Server Logger"
+            )
         if (PAPIHook.setup(this)) {
             PAPIExpansion().register()
             registerPlaceHolder()
@@ -129,12 +135,20 @@ class ALBCore : JavaPlugin() {
             playerOnly = true
             playerOnlyMessage = "&cOnly Player can access shop."
 
+
             action { sender, _ ->
                 val player = sender as Player
 
-                GuiBuilder("&8Shop | %alb_test%\\\$", 3)
-                    .onOpen { SoundUtil.play(it,"minecraft:block.chest.open") }
-                    .onClose { SoundUtil.play(it,"minecraft:block.chest.open") }
+                GuiBuilder("&8Shop | %alb_test%\$", 3)
+                    .onOpen {
+                        SoundUtil.play(it, "minecraft:block.chest.open")
+                        DiscordLogger.on("shop").info("Shop Opened", "**${it.name}** opened the shop.")
+                    }
+
+                    .onClose {
+                        SoundUtil.play(it, "minecraft:block.chest.close")
+                        DiscordLogger.on("shop").info("Shop Closed", "**${it.name}** closed the shop.")
+                    }
                     .refreshEvery(20)
 
                     .setItem(13, { p ->
@@ -148,11 +162,22 @@ class ALBCore : JavaPlugin() {
                         val m = VaultHook.getMoney(p)
                         if (m < 100) {
                             SoundUtil.play(p, "minecraft:entity.villager.no")
-                            MessageUtil.send(p,"&cYou Don't have enough money to buy it")
+                            MessageUtil.send(p, "&cYou don't have enough money!")
+                            DiscordLogger.on("shop").warning("Purchase Failed", "**${p.name}** tried to buy a Diamond but only had **${NumberUtil.formatNumber(m.toLong())} coins**.")
                         } else {
                             VaultHook.takeMoney(p, 100.0)
                             p.inventory.addItem(ItemStack(Material.DIAMOND, 1))
                             MessageUtil.send(p, "&aPurchased!")
+                            DiscordLogger.on("shop").embed {
+                                title = "💎 Purchase Success"
+                                color = DiscordColor.GREEN
+                                timestamp = true
+                                field("Player", p.name, inline = true)
+                                field("Item", "Diamond x1", inline = true)
+                                field("Price", "100 coins", inline = true)
+                                field("Balance After", "${NumberUtil.formatNumber((m - 100).toLong())} coins", inline = true)
+                                footer = "ALBCore Shop"
+                            }
                         }
                     }
                     .open(player)
