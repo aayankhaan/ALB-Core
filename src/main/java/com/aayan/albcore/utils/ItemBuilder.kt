@@ -7,11 +7,11 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
 
+class ItemBuilder(private val item: ItemStack) {
 
-class ItemBuilder(material: Material, amount: Int = 1) {
+    constructor(material: Material, amount: Int = 1) : this(ItemStack(material, amount))
 
-    private val item = ItemStack(material, amount)
-    private val meta = item.itemMeta ?: throw IllegalArgumentException("Item has no meta: $material")
+    private val meta = item.itemMeta ?: throw IllegalArgumentException("Item has no meta: ${item.type}")
 
     fun name(player: Player, text: String) = apply {
         meta.displayName(ColorUtil.parseWithPAPI(player, text).decoration(TextDecoration.ITALIC, false))
@@ -31,7 +31,7 @@ class ItemBuilder(material: Material, amount: Int = 1) {
 
     fun glow() = apply {
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS)
-        meta.addEnchant(Enchantment.UNBREAKING,1,true)
+        meta.addEnchant(Enchantment.UNBREAKING, 1, true)
     }
 
     fun build(): ItemStack {

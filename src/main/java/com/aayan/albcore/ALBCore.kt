@@ -72,13 +72,15 @@ class ALBCore : JavaPlugin() {
                         item(0..8) { p, _ ->
                             GuiItem(ItemBuilder(Material.GRAY_STAINED_GLASS_PANE).name(p, " ").build())
                         }
+                        item(0) { p, _ ->
+                            GuiItem(ItemBuilder(HeadUtil.fromPlayerName(p.name)).name(p, "&c%player_name%").build())
+                        }
                         item(4) { p, _ ->
                             GuiItem(ItemBuilder(Material.BARRIER).name(p, "&cClose").build()) { p, _ ->
                                 p.closeInventory()
                             }
                         }
                     }
-
                     .page {
                         item(13) { p, _ ->
                             GuiItem(ItemBuilder(Material.DIAMOND)
