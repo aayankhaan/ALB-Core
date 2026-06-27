@@ -13,6 +13,13 @@ class GuiBuilder(private val title: String, private val rows: Int) : InventoryHo
 
     internal val actions = mutableMapOf<Int, (Player) -> Unit>()
     private val dynamicItem = mutableMapOf<Int, (Player) -> ItemStack>()
+
+    internal val pages = mutableListOf<PageScope>()
+    internal var globalScope: PageScope? = null
+    internal var currentPage: Int = 0
+
+    internal val pageActions = mutableMapOf<Int, (Player, PageContext) -> Unit>()
+
     internal var refreshTask: BukkitTask? = null
     internal var onOpenAction: ((Player) -> Unit)? = null
     internal var onCloseAction: ((Player) -> Unit)? = null
@@ -20,26 +27,68 @@ class GuiBuilder(private val title: String, private val rows: Int) : InventoryHo
     private var guiInventory: Inventory = Bukkit.createInventory(this, rows * 9)
 
     override fun getInventory(): Inventory = guiInventory
-    fun setItems(vararg slots: Int, item: (Player) -> ItemStack, action: ((Player) -> Unit)? = null) = apply {
-        slots.forEach { slot -> setItem(slot, item, action) }
-    }
+
+    private val guiOwner: Player?
+        get() = guiInventory.viewers.firstOrNull() as? Player
 
     fun setItem(slot: Int, item: (Player) -> ItemStack, action: ((Player) -> Unit)? = null) = apply {
         dynamicItem[slot] = item
         if (action != null) actions[slot] = action
     }
 
-    fun onOpen(action: (Player) -> Unit) = apply {
-        onOpenAction = action
+    fun setItems(vararg slots: Int, item: (Player) -> ItemStack, action: ((Player) -> Unit)? = null) = apply {
+        slots.forEach { slot -> setItem(slot, item, action) }
     }
 
-    fun onClose(action: (Player) -> Unit) = apply {
-        onCloseAction = action
+    fun global(block: PageScope.() -> Unit) = apply {
+        val scope = PageScope()
+        scope.block()
+        globalScope = scope
     }
+
+    fun page(block: PageScope.() -> Unit) = apply {
+        val scope = PageScope()
+        scope.block()
+        pages.add(scope)
+    }
+
+    fun goToPage(index: Int) {
+        if (index < 0 || index >= pages.size) return
+        currentPage = index
+        refresh()
+    }
+
+    fun onOpen(action: (Player) -> Unit) = apply { onOpenAction = action }
+    fun onClose(action: (Player) -> Unit) = apply { onCloseAction = action }
 
     fun refresh() = apply {
-        val player = inventory.viewers.firstOrNull() as? Player ?: return@apply
-        dynamicItem.forEach { (slot, item) -> inventory.setItem(slot, item(player)) }
+        val player = guiOwner ?: return@apply
+        guiInventory.clear()
+        pageActions.clear()
+
+        val ctx = PageContext(currentPage, pages.size, this)
+
+        globalScope?.itemScopes?.forEach { scope ->
+            scope.slots.forEach { slot ->
+                val guiItem = scope.item(player, ctx)
+                guiInventory.setItem(slot, guiItem.item)
+                guiItem.action?.let { pageActions[slot] = it }
+            }
+        }
+
+        if (pages.isNotEmpty()) {
+            pages[currentPage].itemScopes.forEach { scope ->
+                scope.slots.forEach { slot ->
+                    val guiItem = scope.item(player, ctx)
+                    guiInventory.setItem(slot, guiItem.item)
+                    guiItem.action?.let { pageActions[slot] = it }
+                }
+            }
+        }
+
+        dynamicItem.forEach { (slot, item) ->
+            guiInventory.setItem(slot, item(player))
+        }
     }
 
     fun refreshEvery(ticks: Long) = apply {

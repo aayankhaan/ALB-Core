@@ -3,6 +3,7 @@ package com.aayan.albcore
 import com.aayan.albcore.commands.ArgType
 import com.aayan.albcore.commands.CommandUtil
 import com.aayan.albcore.gui.GuiBuilder
+import com.aayan.albcore.gui.GuiItem
 import com.aayan.albcore.gui.GuiListener
 import com.aayan.albcore.hooks.PAPIExpansion
 import com.aayan.albcore.hooks.PAPIHook
@@ -35,6 +36,7 @@ class ALBCore : JavaPlugin() {
         registerEcoCommand()
         registerPunishCommand()
         registerPayCommand()
+        registerPageTestGui()
     }
 
     override fun onDisable() {
@@ -47,6 +49,79 @@ class ALBCore : JavaPlugin() {
         PAPIExpansion.registerPAPI("test") {player -> NumberUtil.formatNumber(VaultHook.getMoney(player).toLong())}
     }
 
+    private fun registerPageTestGui() {
+        CommandUtil.registerCommand(this, "pagetest") {
+            description = "Test pagination GUI"
+            playerOnly = true
+            playerOnlyMessage = "&cOnly players can use this."
+
+            action { sender, _ ->
+                val player = sender as Player
+
+                GuiBuilder("&8Page Test", 3)
+                    .onOpen { SoundUtil.play(it, "minecraft:block.chest.open") }
+                    .onClose { SoundUtil.play(it, "minecraft:block.chest.close") }
+
+                    .global {
+                        item(0..8) { p, _ ->
+                            GuiItem(ItemBuilder(Material.GRAY_STAINED_GLASS_PANE).name(p, " ").build())
+                        }
+                        item(4) { p, _ ->
+                            GuiItem(ItemBuilder(Material.BARRIER).name(p, "&cClose").build()) { p, _ ->
+                                p.closeInventory()
+                            }
+                        }
+                    }
+
+                    .page {
+                        item(13) { p, _ ->
+                            GuiItem(ItemBuilder(Material.DIAMOND)
+                                .name(p, "&bDiamond")
+                                .lore(p, "&7Page 1 item")
+                                .glow()
+                                .build()
+                            ) { p, _ ->
+                                MessageUtil.send(p, "&bClicked diamond on page 1!")
+                            }
+                        }
+
+                        item(26) { p, ctx ->
+                            if (ctx.hasNextPage)
+                                GuiItem(ItemBuilder(Material.ARROW)
+                                    .name(p, "&aNext Page &7(${ctx.currentPage + 1}/${ctx.totalPages})")
+                                    .build()
+                                ) { _, ctx -> ctx.nextPage() }
+                            else
+                                GuiItem(ItemBuilder(Material.GRAY_STAINED_GLASS_PANE).name(p, " ").build())
+                        }
+                    }
+
+                    .page {
+                        item(13) { p, _ ->
+                            GuiItem(ItemBuilder(Material.EMERALD)
+                                .name(p, "&aEmerald")
+                                .lore(p, "&7Page 2 item")
+                                .build()
+                            ) { p, _ ->
+                                MessageUtil.send(p, "&aClicked emerald on page 2!")
+                            }
+                        }
+
+                        item(18) { p, ctx ->
+                            if (ctx.hasPreviousPage)
+                                GuiItem(ItemBuilder(Material.ARROW)
+                                    .name(p, "&cPrevious Page &7(${ctx.currentPage + 1}/${ctx.totalPages})")
+                                    .build()
+                                ) { _, ctx -> ctx.previousPage() }
+                            else
+                                GuiItem(ItemBuilder(Material.GRAY_STAINED_GLASS_PANE).name(p, " ").build())
+                        }
+                    }
+
+                    .open(player)
+            }
+        }
+    }
 
     private fun registerShopGui() {
         CommandUtil.registerCommand(this, "shop") {
@@ -152,9 +227,6 @@ class ALBCore : JavaPlugin() {
         }
     }
 
-    // ============================================================
-    // /testgui - Confirms GUI system still works
-    // ============================================================
     private fun registerTestGui() {
         CommandUtil.registerCommand(this, "testgui") {
             description = "Open the test GUI menu"
@@ -190,10 +262,6 @@ class ALBCore : JavaPlugin() {
         }
     }
 
-    // ============================================================
-    // /eco <add/remove/check> <player> [amount]
-    // SUBCOMMAND-FIRST pattern
-    // ============================================================
     private fun registerEcoCommand() {
         CommandUtil.registerCommand(this, "eco") {
             description = "Manage player economy balances."
@@ -327,10 +395,6 @@ class ALBCore : JavaPlugin() {
         }
     }
 
-    // ============================================================
-    // /punish <player> <mute/ban/kick> [time - only for mute/ban]
-    // PLAYER-FIRST pattern - arg() declared BEFORE subcommand()
-    // ============================================================
     private fun registerPunishCommand() {
         CommandUtil.registerCommand(this, "punish") {
             description = "Punish a player on the server."
