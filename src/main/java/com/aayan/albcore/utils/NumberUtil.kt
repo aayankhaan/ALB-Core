@@ -2,7 +2,6 @@ package com.aayan.albcore.utils
 
 object NumberUtil {
 
-
     fun formatNumber(n: Long): String {
         return when {
             n >= 1000000000000 -> String.format("%.1fT", n / 1000000000000.0)
@@ -11,6 +10,10 @@ object NumberUtil {
             n >= 1000 -> String.format("%.1fK", n / 1000.0)
             else -> n.toString()
         }.replace(".0", "")
+    }
+
+    fun formatComma(n: Long): String {
+        return "%,d".format(n)
     }
 
     fun parseNumber(input: String): Long? {
@@ -24,6 +27,4 @@ object NumberUtil {
             else -> runCatching { value.toDouble().toLong() }.getOrNull()
         }
     }
-
-
 }
