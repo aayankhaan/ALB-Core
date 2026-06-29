@@ -3,6 +3,7 @@ package com.aayan.albcore.gui
 import com.aayan.albcore.ALBCore
 import com.aayan.albcore.utils.ColorUtil
 import org.bukkit.Bukkit
+import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.InventoryHolder
@@ -124,6 +125,37 @@ class GuiBuilder(private val title: String, private val rows: Int) : InventoryHo
         refreshTask = Bukkit.getScheduler().runTaskTimer(ALBCore.instance, Runnable {
             refresh()
         }, 0L, ticks)
+    }
+
+    fun clearItems(range: IntRange): GuiBuilder {
+        range.forEach {
+            inventory.setItem(it, null)
+        }
+        return this
+    }
+
+    fun addItem(item: ItemStack, range: IntRange = 0..44): Boolean {
+        for (slot in range) {
+            val current = inventory.getItem(slot)
+
+            if (current == null || current.type == Material.AIR) {
+                inventory.setItem(slot, item)
+                return true
+            }
+        }
+
+        return false
+    }
+
+    fun addItems(items: Collection<ItemStack>, range: IntRange = 0..44): List<ItemStack> {
+        val leftover = mutableListOf<ItemStack>()
+
+        items.forEach {
+            if (!addItem(it, range))
+                leftover += it
+        }
+
+        return leftover
     }
 
     fun open(player: Player) = apply {
