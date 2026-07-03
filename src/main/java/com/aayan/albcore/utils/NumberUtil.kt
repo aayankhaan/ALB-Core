@@ -12,6 +12,16 @@ object NumberUtil {
         }.replace(".0", "")
     }
 
+    fun formatNumber(n: Double): String {
+        return when {
+            n >= 1000000000000 -> "%.2fT".format(n / 1000000000000)
+            n >= 1000000000 -> "%.2fB".format(n / 1000000000)
+            n >= 1000000 -> "%.2fM".format(n / 1000000)
+            n >= 1000 -> "%.2fK".format(n / 1000)
+            else -> "%.2f".format(n)
+        }.replace(".00", "").replace(Regex("\\.([0-9])0$"), ".$1")
+    }
+
     fun formatComma(n: Long): String {
         return "%,d".format(n)
     }
