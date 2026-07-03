@@ -4,5 +4,6 @@ main: com.aayan.albcore.ALBCore
 api-version: '1.21'
 author: 'Aayan'
 softdepend:
-  - Vault
-  - PlaceholderAPI
+  - vault
+  - placeholderapi
+  - packetevent

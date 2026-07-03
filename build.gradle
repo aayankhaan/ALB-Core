@@ -8,6 +8,8 @@ group = 'com.aayan'
 version = '0.1.0'
 
 repositories {
+    maven { url = uri("https://repo.codemc.io/repository/maven-releases/") }
+    maven { url = uri("https://repo.codemc.io/repository/maven-snapshots/") }
     maven { url 'https://jitpack.io' }
     mavenCentral()
     maven {
@@ -24,6 +26,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly("com.github.retrooper:packetevents-spigot:2.13.0")
     compileOnly "com.github.MilkBowl:VaultAPI:1.7"
     compileOnly 'me.clip:placeholderapi:2.12.2'
     compileOnly "io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT"

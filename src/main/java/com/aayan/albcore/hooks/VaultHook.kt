@@ -11,19 +11,17 @@ object VaultHook {
 
     fun setup(plugin: ALBCore): Boolean {
         if (Bukkit.getPluginManager().getPlugin("Vault") == null) {
-            plugin.logger.warning("Vault not found! Economy features disabled.")
             return false
         }
 
         val rsp = Bukkit.getServicesManager().getRegistration(Economy::class.java)
 
         if (rsp == null) {
-            plugin.logger.warning("No economy provider found! Economy features disabled.")
             return false
         }
 
         economy = rsp.provider
-        plugin.logger.info("Vault hooked into ${economy!!.name}")
+
         return true
     }
 

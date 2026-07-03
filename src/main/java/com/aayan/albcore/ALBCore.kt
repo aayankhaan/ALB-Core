@@ -1,22 +1,14 @@
 package com.aayan.albcore
 
-import com.aayan.albcore.commands.ArgType
-import com.aayan.albcore.commands.CommandUtil
-import com.aayan.albcore.gui.GuiBuilder
-import com.aayan.albcore.gui.GuiItem
 import com.aayan.albcore.gui.GuiListener
 import com.aayan.albcore.hooks.PAPIExpansion
 import com.aayan.albcore.hooks.PAPIHook
+import com.aayan.albcore.hooks.PacketEventsHook
 import com.aayan.albcore.hooks.VaultHook
 import com.aayan.albcore.listeners.PlayerListener
-import com.aayan.albcore.logging.DiscordColor
 import com.aayan.albcore.logging.DiscordLogger
 import com.aayan.albcore.utils.*
 import org.bukkit.Bukkit
-
-import org.bukkit.Material
-import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 
 class ALBCore : JavaPlugin() {
@@ -28,15 +20,52 @@ class ALBCore : JavaPlugin() {
 
     override fun onEnable() {
         instance = this
-        VaultHook.setup(this)
-        DiscordLogger.setup("shop",
-            "https://discord.com/api/webhooks/1520225204331352074/hCAwE6vQCmr5FfhOvd5Va6-x9fMR09NpIl0w9aHyssx8NFBaDS-LtZwocbeVAbsTBjfO",
-            "Server Logger"
-            )
-        if (PAPIHook.setup(this)) {
-            PAPIExpansion().register()
-            registerPlaceHolder()
+
+        val g = "\u001B[32m"
+        val r = "\u001B[31m"
+        val x = "\u001B[0m"
+
+        println()
+        println("$g══════════════════════════════════════════════════════════════$x")
+        println("$g    _      _       ____       ____    ___    ____    _____ $x")
+        println("$g   / \\    | |     | __ )     / ___|  / _ \\  |  _ \\  | ____|$x")
+        println("$g  / _ \\   | |     |  _ \\    | |     | | | | | |_) | |  _|  $x")
+        println("$g / ___ \\  | |___  | |_) |   | |___  | |_| | |  _ <  | |___ $x")
+        println("$g/_/   \\_\\ |_____| |____/     \\____|  \\___/  |_| \\_\\ |_____|$x")
+        println("")
+        println("$g  Version : ${description.version}$x")
+        println("$g  Author  : Aayan$x")
+        println("$g══════════════════════════════════════════════════════════════$x")
+
+        val vaultLoaded = VaultHook.setup(this)
+        val papiLoaded = PAPIHook.setup(this)
+        val packetLoaded = PacketEventsHook.setup(this)
+
+        if (papiLoaded) PAPIExpansion().register()
+
+        println("$g════════════════════════════════════$x")
+        println("  Hooks:")
+        println("  ${if (vaultLoaded) "$g✔$x" else "$r✘$x"} Vault")
+        println("  ${if (papiLoaded) "$g✔$x" else "$r✘$x"} PlaceholderAPI")
+        println("  ${if (packetLoaded) "$g✔$x" else "$r✘$x"} PacketEvents")
+
+
+        val dependents = server.pluginManager.plugins
+            .filter { plugin ->
+                plugin.description.depend.contains("ALBCore") ||
+                        plugin.description.softDepend.contains("ALBCore")
+            }
+            .map { it.name }
+
+        if (dependents.isNotEmpty()) {
+            println("$g════════════════════════════════════$x")
+            println("  Plugins using ALBCore:")
+            dependents.forEach { println("  $g✔$x $it") }
         }
+
+        println("$g════════════════════════════════════$x")
+        println()
+
         server.pluginManager.registerEvents(GuiListener(), this)
         server.pluginManager.registerEvents(PlayerListener(), this)
 
@@ -47,13 +76,8 @@ class ALBCore : JavaPlugin() {
 
     override fun onDisable() {
         PlayerDataUtil.saveAll()
+        PacketEventsHook.unregisterAll()
         logger.info("All player data saved successfully!")
-    }
-
-
-    private fun registerPlaceHolder() {
-        logger.info("Alb Test PAPI has been registered")
-        PAPIExpansion.registerPAPI("test") {player -> NumberUtil.formatNumber(VaultHook.getMoney(player).toLong())}
     }
 
 }

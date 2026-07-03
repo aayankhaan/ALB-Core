@@ -10,7 +10,6 @@ object PAPIHook {
 
     fun setup(plugin: ALBCore): Boolean {
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
-            plugin.logger.warning("PlaceHolderAPI not found! PAPI features disabled.")
             return false
         }
         loaded = true
