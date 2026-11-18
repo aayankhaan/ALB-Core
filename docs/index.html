@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ALBCore Docs</title>
+<meta name="description" content="ALBCore 1.0.0: the base framework for ALB plugins on Paper 26.3 (GUI, commands, database, player data, hooks, utilities).">
+<style>
+:root {
+  --bg: #fbfaf7;
+  --panel: #f2efe8;
+  --text: #1f2328;
+  --muted: #5d6470;
+  --border: #ddd8cc;
+  --accent: #b4541a;
+  --accent-soft: #f6e3d6;
+  --code-bg: #1e2127;
+  --code-text: #e6e6e6;
+  --code-comment: #8b949e;
+  --code-key: #ffa657;
+  --code-str: #a5d6a7;
+  --inline-bg: #ece7dc;
+  --warn-bg: #fff4d6;
+  --warn-border: #e2b93b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171b;
+    --panel: #1c1f24;
+    --text: #e8e6e3;
+    --muted: #a0a6b0;
+    --border: #2d3138;
+    --accent: #f08a4b;
+    --accent-soft: #3a2619;
+    --code-bg: #0f1114;
+    --inline-bg: #262a31;
+    --warn-bg: #2f2814;
+    --warn-border: #a88a2c;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15171b;
+  --panel: #1c1f24;
+  --text: #e8e6e3;
+  --muted: #a0a6b0;
+  --border: #2d3138;
+  --accent: #f08a4b;
+  --accent-soft: #3a2619;
+  --code-bg: #0f1114;
+  --inline-bg: #262a31;
+  --warn-bg: #2f2814;
+  --warn-border: #a88a2c;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+a { color: var(--accent); }
+code, pre { font-family: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, monospace; font-size: 0.9em; }
+:not(pre) > code { background: var(--inline-bg); padding: 0.1em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+pre {
+  background: var(--code-bg);
+  color: var(--code-text);
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+pre .c { color: var(--code-comment); }
+pre .k { color: var(--code-key); }
+pre .s { color: var(--code-str); }
+.layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; }
+nav.sidebar {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  background: var(--panel); border-right: 1px solid var(--border);
+  padding: 24px 18px;
+}
+.brand { font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em; margin-bottom: 2px; }
+.brand span { color: var(--accent); }
+.version { color: var(--muted); font-size: 0.85rem; margin-bottom: 18px; }
+nav.sidebar ol { list-style: none; padding: 0; margin: 0; }
+nav.sidebar li a {
+  display: block; padding: 5px 10px; border-radius: 6px;
+  color: var(--text); text-decoration: none; font-size: 0.95rem;
+}
+nav.sidebar li a:hover { background: var(--accent-soft); }
+nav.sidebar li a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav-group { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; margin: 16px 10px 6px; }
+main { padding: 40px 48px 80px; max-width: 980px; }
+h1 { font-size: 2.3rem; letter-spacing: -0.03em; line-height: 1.15; margin: 0 0 8px; }
+h2 { font-size: 1.6rem; letter-spacing: -0.02em; margin: 56px 0 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+h3 { font-size: 1.15rem; margin: 28px 0 8px; }
+.lead { font-size: 1.12rem; color: var(--muted); margin-top: 0; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 0.93rem; display: block; overflow-x: auto; }
+th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--panel); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 20px 0; }
+.card { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; background: var(--panel); }
+.card b { display: block; margin-bottom: 4px; }
+.card p { margin: 0; color: var(--muted); font-size: 0.93rem; }
+.note { border-left: 4px solid var(--warn-border); background: var(--warn-bg); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 14px 0; }
+.rules li { margin-bottom: 6px; }
+.menu-toggle { display: none; }
+@media (max-width: 860px) {
+  .layout { display: block; }
+  nav.sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 16px; }
+  nav.sidebar ol { display: none; }
+  nav.sidebar.open ol { display: block; }
+  .menu-toggle {
+    display: inline-block; margin-top: 8px; background: var(--accent-soft); color: var(--accent);
+    border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font: inherit; cursor: pointer;
+  }
+  main { padding: 24px 16px 60px; }
+  h1 { font-size: 1.8rem; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="brand">ALB<span>Core</span></div>
+  <div class="version">1.0.0 · Paper 26.3 · Java 25 · Kotlin</div>
+  <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="toc">Contents</button>
+  <ol id="toc">
+    <li class="nav-group">Start</li>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#install">Install on a server</a></li>
+    <li><a href="#child">Build a plugin on ALBCore</a></li>
+    <li><a href="#threads">Threading rules</a></li>
+    <li class="nav-group">Data</li>
+    <li><a href="#config">Configuration</a></li>
+    <li><a href="#database">Database</a></li>
+    <li><a href="#migrations">Migrations</a></li>
+    <li><a href="#playerdata">Player data</a></li>
+    <li class="nav-group">Gameplay APIs</li>
+    <li><a href="#gui">GUI</a></li>
+    <li><a href="#commands">Commands</a></li>
+    <li><a href="#hooks">Hooks</a></li>
+    <li><a href="#utils">Utilities</a></li>
+    <li><a href="#discord">Discord logging</a></li>
+    <li class="nav-group">Reference</li>
+    <li><a href="#admin">/albcore command</a></li>
+    <li><a href="#develop">Developing ALBCore</a></li>
+    <li><a href="#upgrade">Upgrading from 0.1.0</a></li>
+  </ol>
+</nav>
+
+<main>
+<section id="overview">
+  <h1>ALBCore</h1>
+  <p class="lead">The base framework for every ALB plugin on Skyabyss. It gives ALBLevel, ALBSkills and later plugins one shared, tested way to build menus, commands, database tables and per-player data, for Java and Bedrock players.</p>
+  <div class="cards">
+    <div class="card"><b>GUI</b><p>Chest menus with pages, per-player items, click actions and locked or item-input slots.</p></div>
+    <div class="card"><b>Commands</b><p>Kotlin builder on Paper's command API: typed args, subcommands, validators, tab completion.</p></div>
+    <div class="card"><b>Database</b><p>SQLite or MySQL with HikariCP, async queries, versioned migrations.</p></div>
+    <div class="card"><b>Player data</b><p>Per-player values stored in YAML, SQLite or MySQL, loaded before join, saved in the background.</p></div>
+    <div class="card"><b>Hooks</b><p>PlaceholderAPI (<code>%alb_*%</code>), Vault economy, PacketEvents.</p></div>
+    <div class="card"><b>Utilities</b><p>Colours, messages, items, heads, numbers, sounds, Discord webhooks.</p></div>
+  </div>
+  <table>
+    <tr><th>Server</th><td>Paper 26.3 (build 252 or newer), Java 25</td></tr>
+    <tr><th>Language</th><td>Kotlin 2.4 (the API is designed for Kotlin; Java can call it too)</td></tr>
+    <tr><th>Soft dependencies</th><td>Vault (or VaultUnlocked), PlaceholderAPI, PacketEvents. All optional.</td></tr>
+    <tr><th>Bundled</th><td>Kotlin runtime, HikariCP (relocated). The MySQL and SQLite drivers come with Paper.</td></tr>
+  </table>
+</section>
+
+<section id="install">
+  <h2>Install on a server</h2>
+  <ol>
+    <li>Put <code>alb-core-1.0.0.jar</code> into <code>plugins/</code> and start the server once.</li>
+    <li>Edit <code>plugins/ALBCore/config.yml</code>: choose <code>database.type</code> (<code>sqlite</code> or <code>mysql</code>), fill in the MySQL login, and pick <code>player-data.storage</code>.</li>
+    <li>Restart. The console shows the database, the player-data storage and which hooks were found. <code>/albcore info</code> shows the same in game.</li>
+  </ol>
+  <div class="note"><b>Secrets:</b> <code>config.yml</code> contains the database password and Discord webhook URLs. Keep it on the server only and never commit it to git.</div>
+  <p>If ALBCore cannot connect to the database at startup, it logs the reason and disables itself, so no plugin writes data into the void. Plugins that depend on it must check <code>server.pluginManager.isPluginEnabled("ALBCore")</code> at the start of <code>onEnable</code>, before using any ALBCore class.</p>
+</section>
+
+<section id="child">
+  <h2>Build a plugin on ALBCore</h2>
+  <p>First publish the API jar from the ALB-Core folder:</p>
+<pre>./gradlew publishToMavenLocal</pre>
+  <h3>build.gradle.kts</h3>
+<pre><span class="k">plugins</span> { kotlin(<span class="s">"jvm"</span>) version <span class="s">"2.4.21"</span> }
+
+<span class="k">repositories</span> {
+    mavenLocal()
+    mavenCentral()
+    maven(<span class="s">"https://repo.papermc.io/repository/maven-public/"</span>)
+}
+
+<span class="k">dependencies</span> {
+    compileOnly(<span class="s">"io.papermc.paper:paper-api:26.3.build.252-stable"</span>)
+    compileOnly(<span class="s">"com.aayan:alb-core:1.0.0"</span>)
+    compileOnly(kotlin(<span class="s">"stdlib"</span>))   <span class="c">// ALBCore ships the Kotlin runtime</span>
+}
+
+kotlin { jvmToolchain(25) }</pre>
+  <p><code>gradle.properties</code>:</p>
+<pre>kotlin.stdlib.default.dependency=false</pre>
+  <p>Do not shade Kotlin into child plugins. ALBCore's API passes Kotlin lambdas around, so every ALB plugin must use the same Kotlin runtime: the one inside ALBCore.</p>
+  <h3>plugin.yml</h3>
+<pre>name: ALBLevel
+version: '1.0.0'
+main: com.aayan.albl.ALBLevel
+api-version: '26.3'
+depend: [ALBCore]</pre>
+  <h3>onEnable</h3>
+<pre><span class="k">override fun</span> onEnable() {
+    <span class="c">// Check first: if ALBCore failed to start, its classes can no longer be loaded.</span>
+    <span class="k">if</span> (!server.pluginManager.isPluginEnabled(<span class="s">"ALBCore"</span>)) {
+        server.pluginManager.disablePlugin(<span class="k">this</span>)
+        <span class="k">return</span>
+    }
+    <span class="k">val</span> core = ALBCore.instance
+    core.database.migrate(name) { <span class="c">/* tables, see Migrations */</span> }
+    CommandUtil.registerCommand(<span class="k">this</span>, <span class="s">"level"</span>) { <span class="c">/* ... */</span> }
+    PAPIHook.register(<span class="k">this</span>, <span class="s">"albskills"</span>, <span class="s">"total"</span>) { player -&gt; totalOf(player).toString() }
+}</pre>
+  <h3>Naming</h3>
+  <p>All ALB plugins (ALBSkills, ALBItems, ALBDungeon, ALBQuests, ALBIslands, ALBChat, ALBRewards) share one database. Start every table name with the plugin's short name, so <code>table("skills_players")</code> becomes <code>alb_skills_players</code>, and use the plugin name as the migration owner. Publish placeholders under the plugin's own identifier, such as <code>%albskills_total%</code>.</p>
+</section>
+
+<section id="threads">
+  <h2>Threading rules</h2>
+  <p>The main thread runs the game. Anything slow on it (disk, network, database) makes the whole server lag. ALBCore is built so that you never have to block it.</p>
+  <table>
+    <tr><th>API</th><th>Runs on</th><th>Call from</th></tr>
+    <tr><td><code>Database</code> query/update/transaction...</td><td>ALBCore DB threads</td><td>any thread; returns <code>CompletableFuture</code></td></tr>
+    <tr><td><code>Database.migrate</code></td><td>the calling thread (blocking)</td><td><code>onEnable</code> only</td></tr>
+    <tr><td><code>PlayerData</code> getters / <code>set</code></td><td>in memory, thread-safe</td><td>any thread</td></tr>
+    <tr><td><code>PlayerData.fetch</code> / <code>edit</code></td><td>background</td><td>any thread; returns a future</td></tr>
+    <tr><td>GUI, <code>MessageUtil</code>, <code>ItemBuilder</code>, Vault</td><td>main thread</td><td>main thread</td></tr>
+    <tr><td><code>PAPIHook.register</code> handlers</td><td>any thread (TAB, scoreboards)</td><td>must be thread-safe</td></tr>
+  </table>
+  <p>To use a database result with the Bukkit API, hop back to the main thread with <code>thenSync</code>:</p>
+<pre>db.queryFirst(<span class="s">"SELECT level FROM ${db.table("level_players")} WHERE uuid = ?"</span>, player.uniqueId) { it.getInt(<span class="s">1</span>) }
+    .thenSync(plugin) { level -&gt; player.sendMessage(<span class="s">"Level ${level ?: 1}"</span>) }</pre>
+  <div class="note">Never call <code>.join()</code> or <code>.get()</code> on a database future from the main thread. The one place blocking is fine is <code>AsyncPlayerPreLoginEvent</code>, which runs on a login thread.</div>
+</section>
+
+<section id="config">
+  <h2>Configuration</h2>
+  <p><code>plugins/ALBCore/config.yml</code>. Invalid values fall back to the default with a console warning. Database and player-data changes need a restart; <code>/albcore reload</code> applies webhooks, autosave interval and messages.</p>
+<pre>config-version: 1
+
+database:
+  type: sqlite                 <span class="c"># sqlite | mysql</span>
+  table-prefix: "alb_"         <span class="c"># letters, digits, _</span>
+  sqlite:
+    file: "database.db"        <span class="c"># inside plugins/ALBCore/</span>
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "minecraft"
+    username: "root"
+    password: ""
+    use-ssl: false
+    properties: {}             <span class="c"># extra JDBC properties, e.g. serverTimezone: "UTC"</span>
+  pool:                        <span class="c"># MySQL only; SQLite uses one connection</span>
+    maximum-pool-size: 10
+    minimum-idle: 2
+    connection-timeout-ms: 10000
+    idle-timeout-ms: 600000
+    max-lifetime-ms: 1800000
+    keepalive-time-ms: 0
+
+player-data:
+  storage: yaml                <span class="c"># yaml | sqlite | mysql</span>
+  autosave-interval-seconds: 300
+  load-timeout-seconds: 10
+  load-failed-message: "&amp;cYour player data could not be loaded. Please try again in a moment."
+
+discord:
+  webhooks: {}</pre>
+  <p>For extra YAML files in your own plugin, use <code>ConfigFile</code>. It copies the file from your jar on first use and falls back to the jar's values for keys the user's file is missing:</p>
+<pre><span class="k">val</span> levels = ConfigFile(<span class="k">this</span>, <span class="s">"levels.yml"</span>)
+<span class="k">val</span> maxLevel = levels.config.getInt(<span class="s">"max-level"</span>)
+levels.reload()</pre>
+</section>
+
+<section id="database">
+  <h2>Database</h2>
+  <p><code>ALBCore.instance.database</code> is one shared connection pool for ALBCore and every child plugin. The same code runs on SQLite (test servers) and MySQL (the real server).</p>
+  <h3>Queries</h3>
+<pre><span class="k">val</span> db = ALBCore.instance.database
+<span class="k">val</span> players = db.table(<span class="s">"level_players"</span>)          <span class="c">// "alb_level_players"</span>
+
+db.update(<span class="s">"UPDATE $players SET xp = xp + ? WHERE uuid = ?"</span>, <span class="s">50</span>, uuid)            <span class="c">// Future&lt;Int&gt;</span>
+db.query(<span class="s">"SELECT uuid, level FROM $players ORDER BY level DESC LIMIT 10"</span>) { rs -&gt;
+    rs.getUuid(<span class="s">"uuid"</span>) to rs.getInt(<span class="s">"level"</span>)
+}                                                                            <span class="c">// Future&lt;List&lt;Pair&gt;&gt;</span>
+db.queryFirst(<span class="s">"SELECT level FROM $players WHERE uuid = ?"</span>, uuid) { it.getInt(<span class="s">1</span>) } <span class="c">// Future&lt;Int?&gt;</span>
+db.batch(<span class="s">"INSERT INTO $players (uuid, level) VALUES (?, ?)"</span>, rows)            <span class="c">// one transaction</span>
+db.insertAndGetKey(<span class="s">"INSERT INTO ${db.table("logs")} (message) VALUES (?)"</span>, text) <span class="c">// Future&lt;Long?&gt;</span>
+
+db.transaction { conn -&gt;                   <span class="c">// commit on return, rollback on throw</span>
+    conn.update(<span class="s">"UPDATE $players SET coins = coins - ? WHERE uuid = ?"</span>, price, buyer)
+    conn.update(<span class="s">"UPDATE $players SET coins = coins + ? WHERE uuid = ?"</span>, price, seller)
+}</pre>
+  <ul>
+    <li>Parameters are bound to <code>?</code> in order. A <code>UUID</code> is stored as its 36-character string, an enum as its name, <code>null</code> as SQL NULL. Never build SQL by joining strings with player input.</li>
+    <li>Inside <code>withConnection</code>, <code>transaction</code> and migrations, use the blocking helpers on <code>Connection</code>: <code>update</code>, <code>query</code>, <code>queryFirst</code>, <code>batch</code>, <code>insertAndGetKey</code>, <code>execute</code>, <code>inTransaction</code>. On <code>ResultSet</code> there are <code>getUuid</code>, <code>getIntOrNull</code> and <code>getLongOrNull</code>.</li>
+    <li>Failures are logged by ALBCore (with the SQL) and complete the future exceptionally.</li>
+    <li>SQLite runs all tasks on one thread, in order. MySQL runs them in parallel: chain dependent steps with <code>thenCompose</code> or put them in one <code>transaction</code>.</li>
+  </ul>
+  <h3>SQL that works on both backends</h3>
+  <table>
+    <tr><th>Need</th><th>Use</th></tr>
+    <tr><td>Insert or update</td><td><code>db.dialect.upsert(table, listOf("uuid"), listOf("level", "xp"))</code>, then bind keys and values in that order</td></tr>
+    <tr><td>Insert, skip duplicates</td><td><code>db.dialect.insertIgnore(table, columns)</code></td></tr>
+    <tr><td>Auto-increment id</td><td><code>id ${dialect.autoIncrementPrimaryKey}</code></td></tr>
+    <tr><td>Big text / binary</td><td><code>dialect.longTextType</code>, <code>dialect.blobType</code></td></tr>
+    <tr><td>Player id</td><td><code>uuid CHAR(36)</code></td></tr>
+    <tr><td>Timestamps</td><td><code>BIGINT</code> epoch milliseconds</td></tr>
+  </table>
+</section>
+
+<section id="migrations">
+  <h2>Migrations</h2>
+  <p>Each plugin declares its tables as numbered versions. ALBCore stores the version each plugin has reached in <code>alb_schema_versions</code> and runs only the missing steps, in order, each in its own transaction.</p>
+<pre>db.migrate(<span class="s">"ALBLevel"</span>) {
+    version(<span class="s">1</span>, <span class="s">"Create players table"</span>) {
+        execute(<span class="s">"""CREATE TABLE ${table("level_players")} (
+            uuid CHAR(36) NOT NULL PRIMARY KEY,
+            level INT NOT NULL DEFAULT 1,
+            xp BIGINT NOT NULL DEFAULT 0)"""</span>)
+    }
+    version(<span class="s">2</span>, <span class="s">"Add prestige"</span>) {
+        execute(<span class="s">"ALTER TABLE ${table("level_players")} ADD COLUMN prestige INT NOT NULL DEFAULT 0"</span>)
+    }
+    version(<span class="s">3</span>, <span class="s">"Backend-specific index"</span>) {
+        mysql(<span class="s">"CREATE INDEX ${table("lp_level")} ON ${table("level_players")} (level) USING BTREE"</span>)
+        sqlite(<span class="s">"CREATE INDEX ${table("lp_level")} ON ${table("level_players")} (level)"</span>)
+    }
+}</pre>
+  <ul class="rules">
+    <li>Call <code>migrate</code> in <code>onEnable</code>; it blocks until done. If it throws <code>MigrationException</code>, disable your plugin.</li>
+    <li>Never change or renumber a version that has run on a server. Add a new version instead.</li>
+    <li>MySQL commits <code>CREATE</code>/<code>ALTER</code> immediately, so a failed step can be half applied there. Keep one DDL statement per version. SQLite rolls back the whole step.</li>
+    <li>Servers sharing one MySQL database take a lock while migrating, so they never run the same step twice.</li>
+  </ul>
+</section>
+
+<section id="playerdata">
+  <h2>Player data</h2>
+  <p>Simple per-player values: settings, counters, flags. Each player has one YAML document, stored where <code>player-data.storage</code> says. ALBCore loads it before the player joins and keeps it in memory. It saves in the background on autosave, on quit and on shutdown. If loading fails, the player is refused with a message instead of being let in with empty data.</p>
+<pre>PlayerData.getInt(player, <span class="s">"skills.mining.level"</span>, <span class="s">1</span>)
+PlayerData.getString(player, <span class="s">"title"</span>, <span class="s">"none"</span>)            <span class="c">// also getLong/Double/Boolean/StringList/get/contains</span>
+PlayerData.set(player, <span class="s">"settings.mute-announcements"</span>, <span class="k">true</span>)
+PlayerData.set(player, <span class="s">"old.key"</span>, <span class="k">null</span>)                   <span class="c">// removes</span>
+PlayerData.increment(player, <span class="s">"stats.kills"</span>)                  <span class="c">// atomic, returns the new value</span>
+PlayerData.of(player)?.keys(<span class="s">"skills"</span>)                       <span class="c">// the PlayerDataHolder of a loaded player</span>
+
+<span class="c">// Any player, online or offline (async):</span>
+PlayerData.fetch(uuid).thenSync(plugin) { data -&gt; show(data.getInt(<span class="s">"level"</span>)) }  <span class="c">// offline copy is read-only</span>
+PlayerData.edit(uuid) { data -&gt; data.increment(<span class="s">"pending-rewards"</span>) }           <span class="c">// saved for offline players</span></pre>
+  <p>Use your own table instead when you need to search or sort across players (leaderboards, island values) or store a lot per player.</p>
+  <h3>Switching storage</h3>
+  <ol>
+    <li>Set <code>player-data.storage</code> to the new type (for example <code>mysql</code>) and restart.</li>
+    <li>Run <code>/albcore playerdata import yaml</code> (the old type). Offline players are copied; online players keep their current data.</li>
+  </ol>
+  <p>If <code>player-data.storage</code> is a SQL type different from <code>database.type</code>, player data opens its own small connection pool with the same login settings.</p>
+</section>
+
+<section id="gui">
+  <h2>GUI</h2>
+  <p><code>GuiBuilder</code> creates chest menus (1 to 6 rows). Chest menus work for Bedrock players through Geyser. Create a new <code>GuiBuilder</code> each time you open a menu for a player, and use it on the main thread.</p>
+<pre><span class="k">val</span> gui = GuiBuilder(<span class="s">"&amp;8Skills · &amp;7%player_name%"</span>, <span class="s">6</span>)
+gui.global {                                                   <span class="c">// on every page</span>
+        item(<span class="s">45</span>) { _, ctx -&gt; GuiItem(backArrow) { _, c -&gt; c.previousPage() } }
+        item(<span class="s">53</span>) { _, ctx -&gt; GuiItem(<span class="k">if</span> (ctx.hasNextPage) nextArrow <span class="k">else</span> filler) { _, c -&gt; c.nextPage() } }
+    }
+    .page {                                                    <span class="c">// page 1</span>
+        item(<span class="s">10</span>..<span class="s">16</span>) { player, _ -&gt;
+            GuiItem(skillIcon(player)) { p, ctx -&gt; levelUp(p); ctx.refresh() }
+        }
+    }
+    .page { item(<span class="s">10</span>) { _, _ -&gt; GuiItem(moreIcon) } }          <span class="c">// page 2</span>
+    .setItem(<span class="s">49</span>, { player -&gt; closeButton(player) }) { player -&gt; player.closeInventory() }
+    .refreshEvery(<span class="s">20</span>)                                          <span class="c">// ticks; only while open</span>
+gui.open(player)</pre>
+  <h3>Item-input slots</h3>
+  <p>Everything in a GUI is locked except slots you open with <code>allowItemPlacement</code>. Shift-click, double-click, number keys, the offhand key and dragging are all checked against the slot filters.</p>
+<pre><span class="k">val</span> sell = GuiBuilder(<span class="s">"&amp;8Sell items"</span>, <span class="s">4</span>)
+sell.allowItemPlacement(<span class="s">0</span>..<span class="s">26</span>) { item -&gt; PriceRegistry.hasPrice(item.type) }
+    .setItem(<span class="s">31</span>, { sellButton }) { player -&gt; sellAll(player, sell.getItems(<span class="s">0</span>..<span class="s">26</span>)); sell.clearItems(<span class="s">0</span>..<span class="s">26</span>) }
+    .onClose { player -&gt; player.inventory.addItem(*sell.getItems(<span class="s">0</span>..<span class="s">26</span>).toTypedArray()) }
+sell.open(player)</pre>
+  <div class="note">Items in input slots stay in the GUI until you move them. Give them back in <code>onClose</code>, or they are lost.</div>
+  <table>
+    <tr><th>Member</th><th>What it does</th></tr>
+    <tr><td><code>global { }</code>, <code>page { }</code></td><td>Items shown on every page / on one page. <code>item(slot)</code>, <code>item(vararg slots)</code>, <code>item(range)</code>.</td></tr>
+    <tr><td><code>setItem(slot, item, action)</code></td><td>A fixed slot rebuilt for the viewer on each refresh.</td></tr>
+    <tr><td><code>onOpen</code>, <code>onClose</code></td><td>Callbacks with the player.</td></tr>
+    <tr><td><code>refresh()</code>, <code>goToPage(i)</code>, <code>close()</code>, <code>isOpen()</code></td><td>Runtime control.</td></tr>
+    <tr><td><code>getItems</code>, <code>addItem(s)</code>, <code>clearItems</code></td><td>Read or change slot contents.</td></tr>
+    <tr><td><code>PageContext</code></td><td><code>currentPage</code>, <code>totalPages</code>, <code>hasNextPage</code>, <code>hasPreviousPage</code>, <code>nextPage()</code>, <code>previousPage()</code>, <code>goTo(i)</code>, <code>refresh()</code>.</td></tr>
+  </table>
+</section>
+
+<section id="commands">
+  <h2>Commands</h2>
+  <p>Register commands in <code>onEnable</code>. They go through Paper's command system, so no <code>plugin.yml</code> entry is needed. Arguments are parsed first; the next word then picks a subcommand.</p>
+<pre>CommandUtil.registerCommand(<span class="k">this</span>, <span class="s">"island"</span>) {
+    aliases = mutableListOf(<span class="s">"is"</span>)
+    description = <span class="s">"Island commands"</span>
+    playerOnly = <span class="k">true</span>
+    action { sender, _ -&gt; openIslandMenu(sender <span class="k">as</span> Player) }   <span class="c">// "/island" with no subcommand</span>
+
+    subcommand(<span class="s">"invite"</span>) {
+        arg(<span class="s">"player"</span>, ArgType.PLAYER)
+        action { sender, args -&gt; invite(sender <span class="k">as</span> Player, args.player(<span class="s">"player"</span>)) }
+    }
+    subcommand(<span class="s">"setsize"</span>) {
+        permission = <span class="s">"island.admin"</span>                           <span class="c">// hidden from tab completion without it</span>
+        arg(<span class="s">"owner"</span>, ArgType.OFFLINE_PLAYER)
+        arg(<span class="s">"size"</span>, ArgType.INT) {
+            validate({ _, v -&gt; v <span class="k">in</span> <span class="s">50</span>..<span class="s">500</span>) }) { MessageUtil.send(it, <span class="s">"&amp;cSize must be 50-500"</span>) }
+        }
+        arg(<span class="s">"reason"</span>, ArgType.TEXT) { optional = <span class="k">true</span> }      <span class="c">// rest of the line</span>
+        action { sender, args -&gt;
+            setSize(args.offlinePlayer(<span class="s">"owner"</span>), args.int(<span class="s">"size"</span>), args.stringOrNull(<span class="s">"reason"</span>))
+        }
+    }
+}</pre>
+  <table>
+    <tr><th>Arg type</th><th>Value</th></tr>
+    <tr><td><code>STRING</code></td><td>one word</td></tr>
+    <tr><td><code>TEXT</code></td><td>the rest of the line; must be the last argument</td></tr>
+    <tr><td><code>INT</code>, <code>LONG</code>, <code>DOUBLE</code></td><td>numbers</td></tr>
+    <tr><td><code>BOOLEAN</code></td><td>true/false, yes/no, on/off</td></tr>
+    <tr><td><code>PLAYER</code></td><td>an online player by exact name (Bedrock names include the Floodgate prefix)</td></tr>
+    <tr><td><code>OFFLINE_PLAYER</code></td><td>anyone who joined before; never blocks on a web lookup</td></tr>
+  </table>
+  <p>Custom types: extend <code>ArgType</code> and read the value with <code>args.get&lt;T&gt;(name)</code>.</p>
+<pre><span class="k">object</span> SkillArg : ArgType&lt;Skill&gt;(<span class="s">"skill"</span>) {
+    <span class="k">override fun</span> parse(raw: String) = Skill.byId(raw)
+    <span class="k">override fun</span> suggestions() = Skill.ids
+}</pre>
+  <p>Per argument: <code>optional</code>, <code>validate(check, onFail)</code>, <code>suggest { }</code>, <code>onInvalid { sender, raw -&gt; }</code>. Per command: <code>permission</code>, <code>playerOnly</code>, <code>noPermissionMessage</code>, <code>playerOnlyMessage</code>, <code>onMissingArgs</code>, <code>onUnknownSubcommand</code>.</p>
+</section>
+
+<section id="hooks">
+  <h2>Hooks</h2>
+  <h3>PlaceholderAPI</h3>
+<pre>PAPIHook.register(<span class="k">this</span>, <span class="s">"albskills"</span>, <span class="s">"total"</span>) { player -&gt; totalOf(player).toString() }  <span class="c">// %albskills_total%</span>
+PAPIHook.register(<span class="k">this</span>, <span class="s">"level"</span>) { player -&gt; PlayerData.getInt(player, <span class="s">"level"</span>, <span class="s">1</span>).toString() }  <span class="c">// %alb_level% (shared)</span>
+<span class="k">val</span> text = PAPIHook.parse(player, <span class="s">"Balance: %vault_eco_balance%"</span>)</pre>
+  <p>Each identifier becomes its own PlaceholderAPI expansion, created on first use. Identifiers use <code>a-z</code> and <code>0-9</code> only (PlaceholderAPI splits at the first <code>_</code>); keys use <code>a-z</code>, <code>0-9</code> and <code>_</code>. Handlers can be called from async threads, so only read thread-safe data. They are removed automatically when your plugin disables, and they survive <code>/papi reload</code>.</p>
+  <h3>Vault</h3>
+<pre><span class="k">if</span> (VaultHook.withdraw(player, <span class="s">250.0</span>)) { <span class="c">/* paid */</span> }
+VaultHook.getBalance(player); VaultHook.has(player, <span class="s">100.0</span>); VaultHook.deposit(player, <span class="s">50.0</span>); VaultHook.format(<span class="s">1500.0</span>)</pre>
+  <p>Works with any economy registered through Vault or VaultUnlocked, even if it loads after ALBCore. Without an economy, reads return 0 and changes return false.</p>
+  <h3>PacketEvents</h3>
+<pre><span class="k">if</span> (PacketEventsHook.isEnabled()) PacketEventsHook.register(<span class="k">this</span>, MyPacketListener())</pre>
+</section>
+
+<section id="utils">
+  <h2>Utilities</h2>
+  <h3>Text: ColorUtil and MessageUtil</h3>
+  <p>All text accepts MiniMessage (<code>&lt;red&gt;</code>, <code>&lt;gradient:gold:red&gt;</code>) and legacy codes (<code>&amp;c</code>, <code>&amp;l</code>, <code>&amp;#ff8800</code>, <code>&amp;x&amp;f&amp;f&amp;8&amp;8&amp;0&amp;0</code>).</p>
+<pre>MessageUtil.send(sender, <span class="s">"&amp;aSaved!"</span>)
+MessageUtil.sendWithPAPI(player, <span class="s">"&amp;7Rank: %luckperms_prefix%"</span>)
+MessageUtil.actionBar(player, <span class="s">"&amp;e+25 XP"</span>)
+MessageUtil.sendTitle(player, <span class="s">"&amp;6Level up!"</span>, <span class="s">"&amp;7Level 12"</span>, fadeIn = <span class="s">200</span>, stay = <span class="s">2000</span>, fadeOut = <span class="s">300</span>)  <span class="c">// ms</span>
+MessageUtil.broadcast(<span class="s">"&amp;dA boss spawned!"</span>, permission = <span class="k">null</span>)
+<span class="k">val</span> component = ColorUtil.parse(<span class="s">"&amp;bHello &lt;bold&gt;there"</span>)
+<span class="k">val</span> plain = ColorUtil.toPlainText(<span class="s">"&amp;bHello"</span>)                 <span class="c">// "Hello"</span>
+<span class="k">val</span> safe = ColorUtil.escape(chatMessage)                         <span class="c">// player text: always escape</span></pre>
+  <div class="note">Never pass raw player text (chat, sign lines, renamed items) to <code>parse</code> without <code>ColorUtil.escape</code>. Otherwise players can inject tags such as click events.</div>
+  <h3>Items and heads</h3>
+<pre><span class="k">val</span> sword = ItemBuilder(Material.DIAMOND_SWORD)
+    .name(<span class="s">"&amp;bStarter Sword"</span>)
+    .lore(<span class="s">"&amp;7Damage: &amp;c5"</span>, <span class="s">"&amp;7Tier: &amp;aE"</span>)
+    .glow()
+    .unbreakable()
+    .data(key, PersistentDataType.STRING, <span class="s">"starter"</span>)
+    .build()
+<span class="k">val</span> head = HeadUtil.fromBase64(texture)        <span class="c">// also fromPlayerName(name), fromPlayer(offlinePlayer)</span></pre>
+  <p>Names and lore are not italic by default. Pass a player (<code>name(player, text)</code>) to fill in placeholders. <code>ignoreAlbLore()</code> marks items that ALBLore should leave alone.</p>
+  <h3>Numbers</h3>
+  <table>
+    <tr><th>Call</th><th>Result</th></tr>
+    <tr><td><code>NumberUtil.formatNumber(1500L)</code></td><td><code>1.5K</code></td></tr>
+    <tr><td><code>NumberUtil.formatNumber(1234.5)</code></td><td><code>1.23K</code></td></tr>
+    <tr><td><code>NumberUtil.formatNumber(999_950L)</code></td><td><code>1M</code></td></tr>
+    <tr><td><code>NumberUtil.formatComma(1234567L)</code></td><td><code>1,234,567</code></td></tr>
+    <tr><td><code>NumberUtil.parseNumber("2.5m")</code></td><td><code>2500000</code> (null if invalid)</td></tr>
+  </table>
+  <h3>Other helpers</h3>
+  <table>
+    <tr><td><code>SoundUtil.play(player, "minecraft:entity.player.levelup", 1f, 1.2f)</code></td><td>Play a sound by key (vanilla or resource pack).</td></tr>
+    <tr><td><code>AnimationUtil.animateTitleNumber(player, title = "&amp;a+%amount% coins", to = 500)</code></td><td>Count-up title.</td></tr>
+    <tr><td><code>ShulkerUtil.process(items) { canSell(it) }</code></td><td>Split items, including shulker contents, into sell and return lists.</td></tr>
+    <tr><td><code>PriceRegistry.set(plugin, Material.WHEAT, 2.5)</code>, <code>getAverage(material, player)</code></td><td>Item prices shared between plugins.</td></tr>
+    <tr><td><code>future.thenSync(plugin) { }</code>, <code>future.logFailure(logger, msg)</code></td><td>Future helpers.</td></tr>
+  </table>
+</section>
+
+<section id="discord">
+  <h2>Discord logging</h2>
+  <p>Name your webhooks in ALBCore's <code>config.yml</code>, then send from any plugin. Requests run in the background, and mentions are always disabled so logged player text can never ping anyone.</p>
+<pre>discord:
+  webhooks:
+    staff:
+      url: "https://discord.com/api/webhooks/..."
+      username: "Skyabyss Logs"</pre>
+<pre>DiscordLogger.on(<span class="s">"staff"</span>).warning(<span class="s">"Big trade"</span>, <span class="s">"${a.name} gave ${b.name} 64 diamonds"</span>)
+DiscordLogger.on(<span class="s">"staff"</span>).embed {
+    title = <span class="s">"Boss killed"</span>
+    color = DiscordColor.PURPLE
+    field(<span class="s">"Floor"</span>, <span class="s">"E"</span>, inline = <span class="k">true</span>)
+    timestamp = <span class="k">true</span>
+}</pre>
+</section>
+
+<section id="admin">
+  <h2>/albcore command</h2>
+  <p>Permission <code>albcore.admin</code> (operators by default).</p>
+  <table>
+    <tr><th>Command</th><th>Does</th></tr>
+    <tr><td><code>/albcore</code>, <code>/albcore info</code></td><td>Version, database type and pool, player-data storage, hooks, placeholders, webhooks.</td></tr>
+    <tr><td><code>/albcore reload</code></td><td>Reloads webhooks, autosave interval and messages.</td></tr>
+    <tr><td><code>/albcore playerdata save</code></td><td>Saves all loaded player data now.</td></tr>
+    <tr><td><code>/albcore playerdata import &lt;yaml|sqlite|mysql&gt;</code></td><td>Copies all player data from that storage into the current one.</td></tr>
+  </table>
+</section>
+
+<section id="develop">
+  <h2>Developing ALBCore</h2>
+<pre>./gradlew build                 <span class="c"># tests + build/libs/alb-core-1.0.0.jar</span>
+./gradlew test                  <span class="c"># JUnit 6</span>
+./gradlew publishToMavenLocal   <span class="c"># API jar for child plugins</span></pre>
+  <ul>
+    <li>Database tests run on SQLite every time. Set <code>ALBCORE_TEST_MYSQL_HOST</code> (and optionally <code>_PORT</code>, <code>_DATABASE</code>, <code>_USER</code>, <code>_PASSWORD</code>) to run them against MySQL too. Use a throwaway database.</li>
+    <li>HikariCP is shaded and relocated. The Kotlin runtime is shaded but not relocated, so child plugins can share it. Paper already provides the MySQL/SQLite drivers, Gson and SLF4J.</li>
+    <li>When the public API changes, update <code>MIGRATION.md</code>, this page and <code>.claude/skills/albcore/SKILL.md</code>.</li>
+  </ul>
+</section>
+
+<section id="upgrade">
+  <h2>Upgrading from 0.1.0</h2>
+  <p>1.0.0 renames a few classes and methods (<code>PlayerDataUtil</code> → <code>PlayerData</code>, <code>AveragePrice</code> → <code>PriceRegistry</code>, Vault method names, and more) and fixes several GUI exploits. The full list is in <a href="https://github.com/aayankhaan/ALB-Core/blob/master/MIGRATION.md">MIGRATION.md</a>.</p>
+</section>
+</main>
+</div>
+<script>
+(function () {
+  var toggle = document.getElementById('menuToggle');
+  var sidebar = document.getElementById('sidebar');
+  toggle.addEventListener('click', function () {
+    var open = sidebar.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  var links = Array.prototype.slice.call(document.querySelectorAll('#toc a'));
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  if (!('IntersectionObserver' in window)) return;
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      links.forEach(function (a) { a.classList.remove('active'); });
+      var link = byId[entry.target.id];
+      if (link) link.classList.add('active');
+    });
+  }, { rootMargin: '0px 0px -70% 0px' });
+  document.querySelectorAll('main section').forEach(function (s) { observer.observe(s); });
+})();
+</script>
+</body>
+</html>
