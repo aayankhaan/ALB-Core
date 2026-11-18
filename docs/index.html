@@ -219,8 +219,10 @@ depend: [ALBCore]</pre>
     <span class="k">val</span> core = ALBCore.instance
     core.database.migrate(name) { <span class="c">/* tables, see Migrations */</span> }
     CommandUtil.registerCommand(<span class="k">this</span>, <span class="s">"level"</span>) { <span class="c">/* ... */</span> }
-    PAPIHook.register(<span class="k">this</span>, <span class="s">"level"</span>) { player -&gt; levelOf(player).toString() }
+    PAPIHook.register(<span class="k">this</span>, <span class="s">"albskills"</span>, <span class="s">"total"</span>) { player -&gt; totalOf(player).toString() }
 }</pre>
+  <h3>Naming</h3>
+  <p>All ALB plugins (ALBSkills, ALBItems, ALBDungeon, ALBQuests, ALBIslands, ALBChat, ALBRewards) share one database. Start every table name with the plugin's short name, so <code>table("skills_players")</code> becomes <code>alb_skills_players</code>, and use the plugin name as the migration owner. Publish placeholders under the plugin's own identifier, such as <code>%albskills_total%</code>.</p>
 </section>
 
 <section id="threads">
@@ -447,9 +449,10 @@ sell.open(player)</pre>
 <section id="hooks">
   <h2>Hooks</h2>
   <h3>PlaceholderAPI</h3>
-<pre>PAPIHook.register(<span class="k">this</span>, <span class="s">"level"</span>) { player -&gt; PlayerData.getInt(player, <span class="s">"level"</span>, <span class="s">1</span>).toString() }  <span class="c">// %alb_level%</span>
+<pre>PAPIHook.register(<span class="k">this</span>, <span class="s">"albskills"</span>, <span class="s">"total"</span>) { player -&gt; totalOf(player).toString() }  <span class="c">// %albskills_total%</span>
+PAPIHook.register(<span class="k">this</span>, <span class="s">"level"</span>) { player -&gt; PlayerData.getInt(player, <span class="s">"level"</span>, <span class="s">1</span>).toString() }  <span class="c">// %alb_level% (shared)</span>
 <span class="k">val</span> text = PAPIHook.parse(player, <span class="s">"Balance: %vault_eco_balance%"</span>)</pre>
-  <p>Keys use <code>a-z</code>, <code>0-9</code> and <code>_</code>. Handlers can be called from async threads, so only read thread-safe data. They are removed automatically when your plugin disables, and they survive <code>/papi reload</code>.</p>
+  <p>Each identifier becomes its own PlaceholderAPI expansion, created on first use. Identifiers use <code>a-z</code> and <code>0-9</code> only (PlaceholderAPI splits at the first <code>_</code>); keys use <code>a-z</code>, <code>0-9</code> and <code>_</code>. Handlers can be called from async threads, so only read thread-safe data. They are removed automatically when your plugin disables, and they survive <code>/papi reload</code>.</p>
   <h3>Vault</h3>
 <pre><span class="k">if</span> (VaultHook.withdraw(player, <span class="s">250.0</span>)) { <span class="c">/* paid */</span> }
 VaultHook.getBalance(player); VaultHook.has(player, <span class="s">100.0</span>); VaultHook.deposit(player, <span class="s">50.0</span>); VaultHook.format(<span class="s">1500.0</span>)</pre>

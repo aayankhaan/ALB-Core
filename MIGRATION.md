@@ -31,7 +31,7 @@ See the README for the Gradle setup.
 
 | Before | Now |
 |---|---|
-| `PAPIExpansion.registerPAPI("key") { player -> "..." }` | `PAPIHook.register(this, "key") { player -> "..." }`. Keys are lower-case `a-z0-9_`. The handler may return `null`. Placeholders are removed when your plugin disables. |
+| `PAPIExpansion.registerPAPI("key") { player -> "..." }` | `PAPIHook.register(this, "key") { player -> "..." }` for `%alb_key%`, or `PAPIHook.register(this, "albskills", "key") { }` for a plugin's own `%albskills_key%`. Keys are lower-case `a-z0-9_`. The handler may return `null`. Placeholders are removed when your plugin disables. |
 | `PAPIHook.parse(player: Player, text)` | `PAPIHook.parse(player: OfflinePlayer?, text)` (source compatible) |
 | `VaultHook.getMoney(player)` | `VaultHook.getBalance(player)` |
 | `VaultHook.hasMoney(player, amount)` | `VaultHook.has(player, amount)` |

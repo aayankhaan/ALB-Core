@@ -73,7 +73,7 @@ internal object ALBCoreCommand {
             "&7Hooks: Vault ${flag(VaultHook.isEnabled())}&7, PlaceholderAPI ${flag(PAPIHook.isEnabled())}" +
                 "&7, PacketEvents ${flag(PacketEventsHook.isEnabled())}",
         )
-        MessageUtil.send(sender, "&7Placeholders: &f${PAPIHook.registeredKeys().size}&7, webhooks: &f${DiscordLogger.registeredNames().joinToString().ifEmpty { "none" }}")
+        MessageUtil.send(sender, "&7Placeholders: &f${PAPIHook.registeredPlaceholders().size}&7, webhooks: &f${DiscordLogger.registeredNames().joinToString().ifEmpty { "none" }}")
     }
 
     private fun import(plugin: ALBCore, sender: CommandSender, from: PlayerDataStorageType) {

@@ -12,6 +12,14 @@ writing their own GUI, command, database or player-data code.
 - Repo: `Skyabyss/ALB-Core` (git, https://github.com/aayankhaan/ALB-Core). Kotlin in `src/main/kotlin/com/aayan/albcore`.
 - Version 1.0.0. Paper API `io.papermc.paper:paper-api:26.3.build.252-stable`, Java 25, Kotlin 2.4.21, Gradle 9.9.1 wrapper.
 - Human docs: `docs/index.html`. Breaking changes from 0.1.0: `MIGRATION.md`.
+- Project design (wins over the old `Cloode/` docs): `Skyabyss/DECISIONS.md`, section 4 lists the plugins and how they connect.
+
+Planned child plugins: ALBSkills, ALBItems, ALBDungeon, ALBQuests, ALBIslands, ALBChat, ALBRewards. All share
+one MySQL database (eco plugins use the same server with their own tables).
+
+Planned for ALBCore itself (add them here, never as private copies in a child plugin): coins as the Vault
+economy provider, the NPC system (entity + optional ModelEngine model + click handler), Bedrock forms
+(Floodgate) for confirms and short lists, language files, and an event bus between ALB plugins.
 
 ## Child plugin setup
 
@@ -55,7 +63,9 @@ val core = ALBCore.instance
 2. **`db.migrate(...)` only in `onEnable`** (it blocks). Never edit or renumber a shipped migration
    version; add a new version. On MySQL keep one DDL statement per version (DDL auto-commits).
 3. **Table names always through `db.table("name")`** (or `table("name")` inside a migration). They add
-   the configured prefix (default `alb_`). Prefix your names per plugin: `table("level_players")`.
+   the configured prefix (default `alb_`). Start every name with the plugin's short name so the seven
+   plugins never collide: `skills_`, `items_`, `dungeon_`, `quests_`, `islands_`, `chat_`, `rewards_`
+   (e.g. `table("skills_players")` gives `alb_skills_players`). The migration owner is the plugin name.
 4. **SQL must run on SQLite and MySQL.** Use `db.dialect.upsert(...)`, `dialect.autoIncrementPrimaryKey`,
    `dialect.longTextType`; store UUIDs as `CHAR(36)` (binding a `UUID` param does this); use
    `BIGINT` for epoch millis; `sqlite("...")`/`mysql("...")` in migrations for backend-only SQL.
@@ -181,7 +191,10 @@ Builder: `onMissingArgs { sender, usage -> }`, `onUnknownSubcommand { sender, op
 
 ## Hooks (`com.aayan.albcore.hooks`)
 
-- `PAPIHook.register(plugin, "level") { player -> "${levelOf(player)}" }` gives `%alb_level%`. Key is `a-z0-9_`.
+- Each ALB plugin publishes its own placeholders under its own identifier:
+  `PAPIHook.register(plugin, "albskills", "total") { player -> "${totalOf(player)}" }` gives `%albskills_total%`
+  (identifier `a-z0-9`, no `_`; key `a-z0-9_`). `PAPIHook.register(plugin, "level") { }` uses the shared `%alb_level%`.
+  Expansions are created on first use and removed when the plugin disables. `PAPIHook.registeredPlaceholders()`.
   `PAPIHook.parse(player, text)`, `PAPIHook.isEnabled()`.
 - `VaultHook.getBalance/has/deposit/withdraw(offlinePlayer, amount)`, `format(amount)`, `isEnabled()`.
   Main thread unless the economy plugin is async-safe.
