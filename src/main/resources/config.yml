@@ -1,0 +1,68 @@
+# ALBCore configuration
+#
+# Restart the server after changing the database or player-data sections.
+# "/albcore reload" only reloads the Discord webhooks.
+#
+# This file contains passwords and webhook URLs. It lives on the server only: never commit it to git.
+
+config-version: 1
+
+database:
+  # Shared database for ALBCore and the plugins built on it (ALBLevel, ALBSkills...).
+  # sqlite = a local file, good for test servers. mysql = your host's MySQL/MariaDB server.
+  type: sqlite
+
+  # Added in front of every table name. Letters, digits and _ only.
+  table-prefix: "alb_"
+
+  sqlite:
+    # Path inside plugins/ALBCore/ (or an absolute path).
+    file: "database.db"
+
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "minecraft"
+    username: "root"
+    password: ""
+    use-ssl: false
+    # Extra JDBC connection properties, for example:
+    #   serverTimezone: "UTC"
+    properties: {}
+
+  # Connection pool. Used by MySQL only; SQLite always uses one connection.
+  pool:
+    maximum-pool-size: 10
+    minimum-idle: 2
+    connection-timeout-ms: 10000
+    idle-timeout-ms: 600000
+    max-lifetime-ms: 1800000
+    # 0 = off. Set to e.g. 300000 if your host closes idle connections.
+    keepalive-time-ms: 0
+
+player-data:
+  # Where per-player data (the PlayerData API) is stored: yaml, sqlite or mysql.
+  #   yaml   = one file per player in plugins/ALBCore/playerdata/
+  #   sqlite / mysql = a table in the database configured above.
+  # If this is a different SQL type than database.type, player data opens its own small connection.
+  # To move existing data: change this, restart, then run "/albcore playerdata import <old type>".
+  storage: yaml
+
+  # How often changed player data is saved in the background.
+  autosave-interval-seconds: 300
+
+  # How long a joining player may wait for their data before they are refused.
+  load-timeout-seconds: 10
+
+  # Shown to a player whose data could not be loaded (they are not let in, so nothing is overwritten).
+  load-failed-message: "&cYour player data could not be loaded. Please try again in a moment."
+
+discord:
+  # Named webhooks for DiscordLogger.on("<name>"). Webhook URLs are secrets.
+  webhooks: {}
+  # Example:
+  # webhooks:
+  #   staff:
+  #     url: "https://discord.com/api/webhooks/..."
+  #     username: "Skyabyss Logs"
+  #     avatar-url: ""
