@@ -1,0 +1,58 @@
+name: Release
+
+# Publishes a GitHub Release with the plugin jars whenever a version tag is pushed:
+#   1. set `version = "1.2.3"` in build.gradle.kts and merge it to master
+#   2. git tag v1.2.3 && git push origin v1.2.3
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Check the tag matches the project version
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"$/\1/p' build.gradle.kts)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match version \"$version\" in build.gradle.kts"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Build and test
+        run: ./gradlew build
+
+      - name: Publish the release
+        uses: softprops/action-gh-release@v3
+        with:
+          name: ALBCore ${{ env.VERSION }}
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          files: |
+            build/libs/alb-core-${{ env.VERSION }}.jar
+            build/libs/alb-core-${{ env.VERSION }}-api.jar
+            build/libs/alb-core-${{ env.VERSION }}-sources.jar
+          body: |
+            **Documentation:** https://aayankhaan.github.io/ALB-Core/
+            **Breaking changes and upgrade guide:** [MIGRATION.md](https://github.com/aayankhaan/ALB-Core/blob/${{ github.ref_name }}/MIGRATION.md)
+
+            Requires **Paper 26.3** (build 252 or newer) on **Java 25**.
+
+            | File | Use |
+            | --- | --- |
+            | `alb-core-${{ env.VERSION }}.jar` | The server plugin: put it in `plugins/` |
+            | `alb-core-${{ env.VERSION }}-api.jar` | Compile-only API for plugins built on ALBCore |
+            | `alb-core-${{ env.VERSION }}-sources.jar` | Source code, for your IDE |
