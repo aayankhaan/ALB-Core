@@ -9,8 +9,9 @@ Base framework for the ALB plugins (ALBLevel, ALBSkills, ...) on **Paper 26.3 / 
 - **Hooks**: PlaceholderAPI (`%alb_*%`), Vault economy, PacketEvents.
 - **Utilities**: colours (MiniMessage + `&` codes), messages, items, heads, number formatting, sounds, Discord webhooks.
 
-Full documentation: [`docs/index.html`](docs/index.html) (can be served with GitHub Pages from the `docs/` folder).
-Upgrading from 0.1.0: [`MIGRATION.md`](MIGRATION.md).
+- **Documentation:** https://aayankhaan.github.io/ALB-Core/ (source in [`docs/`](docs/index.html))
+- **Download:** [Releases](https://github.com/aayankhaan/ALB-Core/releases)
+- **Upgrading from 0.1.0:** [`MIGRATION.md`](MIGRATION.md)
 
 ## Build
 
@@ -66,6 +67,21 @@ override fun onEnable() {
     }
 }
 ```
+
+## Releasing
+
+1. Set `version` in `build.gradle.kts` and update `MIGRATION.md` if the API changed. Merge to `master`.
+2. Tag that commit and push the tag:
+
+   ```bash
+   git tag v1.0.1
+   git push origin v1.0.1
+   ```
+
+   The `Release` workflow builds and tests on Java 25, then publishes a GitHub Release with the
+   plugin jar, the API jar and the sources jar. The tag must match the version (`v` + version).
+
+The documentation site is GitHub Pages serving `docs/` from `master`, so docs changes go live when merged.
 
 ## License
 

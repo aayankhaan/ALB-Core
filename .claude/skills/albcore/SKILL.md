@@ -229,5 +229,8 @@ keep menus readable from item names and lore alone.
   `ALBCORE_TEST_MYSQL_HOST` (+ `_PORT`, `_DATABASE`, `_USER`, `_PASSWORD`) is set.
 - Local server: `Skyabyss/test_server` (Paper 26.3 build 252, port 25599). Copy the jar to `plugins/`.
 - Keep public API changes in `MIGRATION.md`, `docs/index.html` and this file in sync.
+- Docs are hosted at https://aayankhaan.github.io/ALB-Core/ (GitHub Pages serving `docs/` on `master`).
+- Release: set `version` in `build.gradle.kts`, merge to `master`, then push tag `v<version>`;
+  `.github/workflows/release.yml` builds, tests and publishes the GitHub Release with the jars.
 - Keep the code Bukkit-free where possible (Database, PlayerDataService, CoreConfig take a `Logger`
   and plain settings) so it stays unit-testable.
