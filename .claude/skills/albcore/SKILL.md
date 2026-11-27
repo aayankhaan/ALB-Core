@@ -224,6 +224,9 @@ fun openHomes(player: Player, back: ((Player) -> Unit)?) {
 - Placeholders `{player}`, `{prefix}`, `{page}`, `{pages}`, plus `MenuContext.placeholders`; a lore line
   that is only a list placeholder becomes one line per value. PlaceholderAPI works in names and lore.
 - `menus.build(player, id, ctx)` gives the `GuiBuilder` unopened (add more, then `open`).
+- Menus found at run time (add-ons): `menus.router { player, id, back -> opened }` is asked first for every
+  `[open] <id>`; `menus.functionRouter { click, id, back -> keepGoing }` runs `[function] <id>` that no
+  context or registered function knows (return false to stop the item's other actions).
 - `MenuDef` data: `title`, `rows`, `fill`, `items`, `listSlots`, `listLayout`, `templates`, `icons`,
   `item(id, placeholders)`, `entry(template, iconKey, fallback, placeholders)`, `iconOr(key, material)`,
   `save()`, `reset()`. ALBCore has no in-game menu editor; a plugin may build its own on this data.
@@ -257,6 +260,8 @@ ChatInput.ask(plugin, player, prompt = "&7Type a name for the home.", onCancel =
 - Closes the open menu (`closeInventory = false` to keep it), sends the prompt and the cancel hint
   (ALBCore lang `chat-input.*`), cancels the chat message (LOWEST priority), runs the handler on the main
   thread. Cancel words (default `cancel`) and the timeout (`timeoutSeconds`, default 60) run `onCancel`.
+- `cancelWords = listOf(...)` replaces ALBCore's cancel words for one question; `emptyList()` hands every
+  message to the handler (for callers that handle "cancel" themselves).
 - `isWaiting(player)`, `cancel(player)` (runs onCancel), `close(player)` (silent). A new question
   replaces an open one. Questions end silently on quit and when the asking plugin disables.
 - The text is raw player input: `ColorUtil.escape` it before showing it, validate it before saving.

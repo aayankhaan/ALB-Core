@@ -473,6 +473,7 @@ menus.opener(<span class="s">"homes"</span>) { player, back -&gt; openHomes(play
     <tr><td><code>[function] &lt;id&gt;</code></td><td>Plugin code: <code>MenuContext.functions</code>, then <code>menus.function</code>. Its permission is checked first.</td></tr>
     <tr><td><code>[player] &lt;cmd&gt;</code>, <code>[console] &lt;cmd&gt;</code>, <code>[message] &lt;text&gt;</code>, <code>[sound] &lt;key&gt; [volume] [pitch]</code></td><td>Commands, a chat message, a sound. Without a <code>[sound]</code> the theme click sound plays.</td></tr>
   </table>
+  <p>Plugins whose menus are only known at run time (add-ons) can route actions themselves: <code>menus.router { player, id, back -&gt; true }</code> is asked first for every <code>[open]</code>, and <code>menus.functionRouter { click, id, back -&gt; true }</code> runs <code>[function]</code> ids that nothing else knows.</p>
   <p>Placeholders: <code>{player}</code>, <code>{prefix}</code>, <code>{page}</code>, <code>{pages}</code> and the menu's own. A lore line that is only a list placeholder becomes one line per value. <code>item-data: "data:&lt;base64&gt;"</code> keeps an exact item (Nexo items). ALBCore has no in-game menu editor.</p>
 </section>
 
@@ -497,7 +498,7 @@ lang.send(player, <span class="s">"home.created"</span>, <span class="s">"name"<
 }</pre>
   <ul>
     <li>The open menu is closed, the prompt and a cancel hint are sent, and the player's chat message is cancelled and handed to your code on the main thread.</li>
-    <li>Typing a cancel word (<code>chat-input.cancel-words</code> in ALBCore's lang.yml, default <code>cancel</code>) or the timeout (default 60 s) runs <code>onCancel</code>.</li>
+    <li>Typing a cancel word (<code>chat-input.cancel-words</code> in ALBCore's lang.yml, default <code>cancel</code>) or the timeout (default 60 s) runs <code>onCancel</code>. <code>cancelWords = emptyList()</code> gives every message to your handler.</li>
     <li>The text is raw player input: validate it, and escape it with <code>ColorUtil.escape</code> before showing it to others.</li>
   </ul>
 </section>

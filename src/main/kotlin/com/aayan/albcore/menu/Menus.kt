@@ -28,8 +28,10 @@ import java.util.concurrent.ConcurrentHashMap
  * ))
  * ```
  *
- * "[open] <id>" opens: the [opener] registered for that id, else the menu file as it is, else tells
- * the player the menu is missing. "[open] <plugin>:<id>" opens a menu of another plugin's registry.
+ * "[open] <id>" opens: what the [router] opens, else the [opener] registered for that id, else the menu
+ * file as it is, else tells the player the menu is missing. "[open] <plugin>:<id>" opens a menu of
+ * another plugin's registry. "[function] <id>" runs the menu's own function, else the registered one,
+ * else the [functionRouter].
  * Main thread only.
  */
 class Menus(
@@ -44,6 +46,8 @@ class Menus(
     private val extra = LinkedHashMap<String, MenuDef>()
     private val openers = LinkedHashMap<String, (Player, ((Player) -> Unit)?) -> Unit>()
     private val functions = LinkedHashMap<String, MenuFunction>()
+    private var router: ((Player, String, ((Player) -> Unit)?) -> Boolean)? = null
+    private var functionRouter: ((GuiClick, String, (Player) -> Unit) -> Boolean)? = null
 
     init {
         reload()
@@ -109,6 +113,24 @@ class Menus(
         functions[id] = MenuFunction(permission, decorate, click)
     }
 
+    /**
+     * A catch-all for "[open] <id>" (and [open] by id), asked before openers and files: for plugins whose
+     * menus are found at run time (e.g. add-ons). Return true when it opened something; false lets the
+     * opener, the file or the "missing" message handle it.
+     */
+    fun router(route: (player: Player, id: String, back: ((Player) -> Unit)?) -> Boolean) {
+        router = route
+    }
+
+    /**
+     * A catch-all for "[function] <id>" that neither the menu's [MenuContext.functions] nor [function]
+     * knows. [back] reopens the menu the click came from. Return false to stop the item's remaining
+     * actions (e.g. the player lacked a permission and you told them so).
+     */
+    fun functionRouter(route: (click: GuiClick, id: String, back: (Player) -> Unit) -> Boolean) {
+        functionRouter = route
+    }
+
     /** Ids of the functions registered with [function]. */
     fun functionIds(): Set<String> = functions.keys
 
@@ -125,6 +147,7 @@ class Menus(
             if (other == null) missing(player, target) else other.open(player, target.substringAfter(':'), back)
             return
         }
+        if (router?.invoke(player, target, back) == true) return
         val opener = openers[target]
         if (opener != null) {
             opener(player, back)
@@ -162,6 +185,7 @@ class Menus(
         val player = click.player
         val function = functionFor(ctx, id)
         if (function == null) {
+            functionRouter?.let { return it(click, id, back) }
             missing(player, id)
             return false
         }

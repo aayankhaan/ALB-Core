@@ -42,6 +42,7 @@ object ChatInput {
         val plugin: Plugin,
         val handler: (String) -> Boolean,
         val onCancel: ((Player) -> Unit)?,
+        val cancelWords: List<String>?,
     ) {
         var timeout: BukkitTask? = null
     }
@@ -51,7 +52,8 @@ object ChatInput {
     /**
      * Asks [player] to type something. [prompt] is sent first (with ALBCore's cancel hint when [hint]
      * is true). The menu the player has open is closed when [closeInventory] is true, so they can type.
-     * [timeoutSeconds] <= 0 waits until the player answers, cancels or quits.
+     * [timeoutSeconds] <= 0 waits until the player answers, cancels or quits. [cancelWords] replaces
+     * ALBCore's cancel words for this question; an empty list gives every message to the handler.
      */
     fun ask(
         plugin: Plugin,
@@ -61,13 +63,15 @@ object ChatInput {
         closeInventory: Boolean = true,
         hint: Boolean = true,
         onCancel: ((Player) -> Unit)? = null,
+        cancelWords: List<String>? = null,
         handler: (String) -> Boolean,
     ) {
-        val question = Question(plugin, handler, onCancel)
+        val question = Question(plugin, handler, onCancel, cancelWords)
+        val words = cancelWords ?: cancelWords()
         open.put(player.uniqueId, question)?.timeout?.cancel()
         if (closeInventory) player.closeInventory()
         if (!prompt.isNullOrBlank()) MessageUtil.sendWithPAPI(player, prompt)
-        if (hint) lang()?.send(player, "chat-input.hint", "word" to (cancelWords().firstOrNull() ?: "cancel"))
+        if (hint && words.isNotEmpty()) lang()?.send(player, "chat-input.hint", "word" to words.first())
         if (timeoutSeconds > 0) {
             question.timeout = Bukkit.getScheduler().runTaskLater(plugin, Runnable {
                 if (!open.remove(player.uniqueId, question)) return@Runnable
@@ -124,7 +128,7 @@ object ChatInput {
             if (!question.plugin.isEnabled) return
             Bukkit.getScheduler().runTask(question.plugin, Runnable {
                 if (open[player.uniqueId] !== question) return@Runnable
-                if (isCancelWord(text)) {
+                if (isCancelWord(text, question.cancelWords ?: cancelWords())) {
                     open.remove(player.uniqueId, question)
                     question.timeout?.cancel()
                     lang()?.send(player, "chat-input.cancelled")
