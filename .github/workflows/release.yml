@@ -47,7 +47,6 @@ jobs:
             build/libs/alb-core-${{ env.VERSION }}-sources.jar
           body: |
             **Documentation:** https://aayankhaan.github.io/ALB-Core/
-            **Breaking changes and upgrade guide:** [MIGRATION.md](https://github.com/aayankhaan/ALB-Core/blob/${{ github.ref_name }}/MIGRATION.md)
 
             Requires **Paper 26.3** (build 252 or newer) on **Java 25**.
 

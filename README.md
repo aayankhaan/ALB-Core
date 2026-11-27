@@ -71,7 +71,7 @@ override fun onEnable() {
 
 ## Releasing
 
-1. Set `version` in `build.gradle.kts` and update `MIGRATION.md` if the API changed. Merge to `master`.
+1. Set `version` in `build.gradle.kts` (and update the docs if the API changed). Push to `master`.
 2. Tag that commit and push the tag:
 
    ```bash
