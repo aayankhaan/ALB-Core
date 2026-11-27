@@ -2,7 +2,9 @@
 
 Base framework for the ALB plugins (ALBLevel, ALBSkills, ...) on **Paper 26.3 / Java 25**, written in Kotlin.
 
-- **GUI**: chest menus with pages, per-player items, click actions and item-input slots (Bedrock-safe).
+- **GUI**: chest menus with pages, paged list areas, per-player items, click actions with click type and cooldown, item-input slots and one shared theme (Bedrock-safe).
+- **YAML menus**: menus admins can restyle in `plugins/<Plugin>/menus/`, with actions, permissions and list areas.
+- **Lang and chat input**: `lang.yml` messages (chat, action bar, title, boss bar) and "type it in chat" questions.
 - **Commands**: a Kotlin builder on Paper's Brigadier API with typed, optional and greedy arguments, subcommands, validators and tab completion.
 - **Database**: SQLite or MySQL through HikariCP. Every query is async, and versioned schema migrations are built in.
 - **Player data**: per-player key/value data stored in YAML, SQLite or MySQL (switch in config).
@@ -11,7 +13,6 @@ Base framework for the ALB plugins (ALBLevel, ALBSkills, ...) on **Paper 26.3 / 
 
 - **Documentation:** https://aayankhaan.github.io/ALB-Core/ (source in [`docs/`](docs/index.html))
 - **Download:** [Releases](https://github.com/aayankhaan/ALB-Core/releases)
-- **Upgrading from 0.1.0:** [`MIGRATION.md`](MIGRATION.md)
 
 ## Build
 
@@ -46,7 +47,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.3.build.252-stable")
-    compileOnly("com.aayan:alb-core:1.0.0")
+    compileOnly("com.aayan:alb-core:1.1.0")
     compileOnly(kotlin("stdlib")) // ALBCore ships the Kotlin runtime; do not shade your own
 }
 

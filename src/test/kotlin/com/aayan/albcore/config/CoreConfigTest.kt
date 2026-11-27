@@ -143,4 +143,55 @@ class CoreConfigTest {
         assertEquals("Logs", hook.username)
         assertEquals(null, hook.avatarUrl)
     }
+
+    @Test
+    fun `bundled gui defaults match the theme`() {
+        val (config, warnings) = load("")
+        assertEquals(emptyList<String>(), warnings)
+        assertEquals(GuiSettings(), config.gui)
+        assertEquals(100L, config.gui.clickCooldownMs)
+    }
+
+    @Test
+    fun `reads gui sounds and cooldown`() {
+        val (config, warnings) = load(
+            """
+            gui:
+              click-cooldown-ms: 0
+              sounds:
+                click: "nexo:ui.tap 0.8"
+                denied: ""
+            """.trimIndent()
+        )
+        assertEquals(emptyList<String>(), warnings)
+        assertEquals(0L, config.gui.clickCooldownMs)
+        assertEquals(GuiSound("nexo:ui.tap", 0.8f, 1f), config.gui.click)
+        assertEquals("", config.gui.denied.key)
+        assertEquals(GuiSettings().success, config.gui.success)
+    }
+
+    @Test
+    fun `bad gui values fall back with a warning`() {
+        val (config, warnings) = load(
+            """
+            gui:
+              click-cooldown-ms: -5
+              sounds:
+                click: "Not A Sound"
+                success: "minecraft:entity.player.levelup loud"
+            """.trimIndent()
+        )
+        assertEquals(3, warnings.size)
+        assertEquals(GuiSettings(), config.gui)
+    }
+
+    @Test
+    fun `parses sound strings`() {
+        assertEquals(GuiSound("minecraft:ui.button.click", 0.4f, 1.2f), GuiSound.parse("minecraft:ui.button.click 0.4 1.2"))
+        assertEquals(GuiSound("entity.villager.no"), GuiSound.parse("  entity.villager.no "))
+        assertEquals(GuiSound(""), GuiSound.parse("none"))
+        assertEquals(GuiSound(""), GuiSound.parse(""))
+        assertEquals(null, GuiSound.parse("a b c d"))
+        assertEquals(null, GuiSound.parse("minecraft:x 1 high"))
+    }
 }

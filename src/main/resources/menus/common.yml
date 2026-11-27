@@ -1,0 +1,68 @@
+# The shared look of every ALB plugin's menus (GuiTheme): frame panes and the back / close / page buttons.
+# Change an item here to restyle the menus of every plugin at once ("/albcore reload").
+#
+# Menu file format (every plugin's menus/<name>.yml uses it):
+#   title, rows (1-6), fill (none | edges | all = where the frame panes go)
+#   items: every item has a slot (0 = top left, 9 per row; -1 = not placed), an item (a material,
+#     or item-data: "data:<base64>" for an exact item such as a Nexo item), name, lore, glow, and
+#     actions run in order when clicked (none = decoration):
+#       [close] [back] [open] <menu> [open] <plugin>:<menu> [next-page] [previous-page] [refresh]
+#       [function] <id> [player] <command> [console] <command> [message] <text> [sound] <sound> [volume] [pitch]
+#     permission: <perm> + locked: (hide: true, or a look and actions for players without it).
+#   list.slots = where the list entries go ("10-16,19-25"; more entries than slots = pages).
+#   list.layout: centered = few entries are spread out in the middle (default: fill in order).
+#   list.look.<name> = name and lore of a list entry; list.icons.<key> = an entry's item.
+# Theme: a cyan frame around every menu, the middle stays empty. corner / corner-bottom can
+# accent the corners (top / bottom); they are the same pane by default.
+
+version: 2
+revision: 1
+title: "Common"
+rows: 1
+fill: edges
+items:
+  frame:
+    slot: -1
+    item: CYAN_STAINED_GLASS_PANE
+    name: " "
+    lore: []
+    actions: []
+  corner:
+    slot: -1
+    item: CYAN_STAINED_GLASS_PANE
+    name: " "
+    lore: []
+    actions: []
+  corner-bottom:
+    slot: -1
+    item: CYAN_STAINED_GLASS_PANE
+    name: " "
+    lore: []
+    actions: []
+  back:
+    slot: -1
+    item: ARROW
+    name: "&#7DD3FC← Back"
+    lore:
+      - "&7Go to the previous menu."
+    actions: []
+  close:
+    slot: -1
+    item: BARRIER
+    name: "&#F87171✖ Close"
+    lore: []
+    actions: []
+  previous:
+    slot: -1
+    item: SPECTRAL_ARROW
+    name: "&#7DD3FC← Previous page"
+    lore:
+      - "&8Page {page} of {pages}"
+    actions: []
+  next:
+    slot: -1
+    item: SPECTRAL_ARROW
+    name: "&#7DD3FCNext page →"
+    lore:
+      - "&8Page {page} of {pages}"
+    actions: []

@@ -10,6 +10,7 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
+import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.inventory.ItemStack
 
 /**
@@ -55,7 +56,7 @@ internal class GuiListener : Listener {
         }
 
         event.isCancelled = true
-        gui.handleClick(rawSlot, player)
+        gui.handleClick(rawSlot, player, event.click)
     }
 
     @EventHandler(priority = EventPriority.LOW)
@@ -80,6 +81,11 @@ internal class GuiListener : Listener {
         val gui = event.inventory.getHolder(false) as? GuiBuilder ?: return
         val player = event.player as? Player ?: return
         gui.handleClose(player)
+    }
+
+    @EventHandler
+    fun onQuit(event: PlayerQuitEvent) {
+        GuiClicks.forget(event.player.uniqueId)
     }
 
     /** The item a click would put into the clicked slot, or null if the click only takes items out. */

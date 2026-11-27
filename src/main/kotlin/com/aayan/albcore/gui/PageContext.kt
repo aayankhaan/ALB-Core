@@ -1,9 +1,12 @@
 package com.aayan.albcore.gui
 
 /** Page information passed to page items and their click actions. */
-class PageContext(val currentPage: Int, val totalPages: Int, private val gui: GuiBuilder) {
+class PageContext(val currentPage: Int, val totalPages: Int, val gui: GuiBuilder) {
     val hasNextPage: Boolean get() = currentPage < totalPages - 1
     val hasPreviousPage: Boolean get() = currentPage > 0
+
+    /** The click being handled right now (null outside a click action). */
+    val click: GuiClick? get() = gui.click
 
     fun nextPage() = gui.goToPage(currentPage + 1)
     fun previousPage() = gui.goToPage(currentPage - 1)

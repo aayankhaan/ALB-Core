@@ -32,7 +32,7 @@ internal object ALBCoreCommand {
             subcommand("reload") {
                 action { sender, _ ->
                     val warnings = plugin.reloadSettings()
-                    MessageUtil.send(sender, "&aALBCore config reloaded.")
+                    MessageUtil.send(sender, "&aALBCore config, lang.yml and menus reloaded.")
                     warnings.forEach { MessageUtil.send(sender, "&e$it") }
                 }
             }

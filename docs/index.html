@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ALBCore Docs</title>
-<meta name="description" content="ALBCore 1.0.0: the base framework for ALB plugins on Paper 26.3 (GUI, commands, database, player data, hooks, utilities).">
+<meta name="description" content="ALBCore 1.1.0: the base framework for ALB plugins on Paper 26.3 (GUI and YAML menus, lang, chat input, commands, database, player data, hooks, utilities).">
 <style>
 :root {
   --bg: #fbfaf7;
@@ -123,7 +123,7 @@ th { background: var(--panel); }
 <div class="layout">
 <nav class="sidebar" id="sidebar">
   <div class="brand">ALB<span>Core</span></div>
-  <div class="version">1.0.0 · Paper 26.3 · Java 25 · Kotlin</div>
+  <div class="version">1.1.0 · Paper 26.3 · Java 25 · Kotlin</div>
   <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="toc">Contents</button>
   <ol id="toc">
     <li class="nav-group">Start</li>
@@ -138,6 +138,9 @@ th { background: var(--panel); }
     <li><a href="#playerdata">Player data</a></li>
     <li class="nav-group">Gameplay APIs</li>
     <li><a href="#gui">GUI</a></li>
+    <li><a href="#menus">YAML menus</a></li>
+    <li><a href="#lang">Lang</a></li>
+    <li><a href="#chatinput">Chat input</a></li>
     <li><a href="#commands">Commands</a></li>
     <li><a href="#hooks">Hooks</a></li>
     <li><a href="#utils">Utilities</a></li>
@@ -145,7 +148,6 @@ th { background: var(--panel); }
     <li class="nav-group">Reference</li>
     <li><a href="#admin">/albcore command</a></li>
     <li><a href="#develop">Developing ALBCore</a></li>
-    <li><a href="#upgrade">Upgrading from 0.1.0</a></li>
   </ol>
 </nav>
 
@@ -195,7 +197,7 @@ th { background: var(--panel); }
 
 <span class="k">dependencies</span> {
     compileOnly(<span class="s">"io.papermc.paper:paper-api:26.3.build.252-stable"</span>)
-    compileOnly(<span class="s">"com.aayan:alb-core:1.0.0"</span>)
+    compileOnly(<span class="s">"com.aayan:alb-core:1.1.0"</span>)
     compileOnly(kotlin(<span class="s">"stdlib"</span>))   <span class="c">// ALBCore ships the Kotlin runtime</span>
 }
 
@@ -402,6 +404,102 @@ sell.open(player)</pre>
     <tr><td><code>getItems</code>, <code>addItem(s)</code>, <code>clearItems</code></td><td>Read or change slot contents.</td></tr>
     <tr><td><code>PageContext</code></td><td><code>currentPage</code>, <code>totalPages</code>, <code>hasNextPage</code>, <code>hasPreviousPage</code>, <code>nextPage()</code>, <code>previousPage()</code>, <code>goTo(i)</code>, <code>refresh()</code>.</td></tr>
   </table>
+  <h3>Themed menus</h3>
+  <p>Every ALB menu shares one look: a cyan frame on the edge, the header in slot 4, back or close at the bottom centre and the page buttons next to it. The items come from <code>plugins/ALBCore/menus/common.yml</code> and the shared texts from <code>plugins/ALBCore/lang.yml</code> (<code>gui.*</code>), so changing those files restyles every plugin's menus.</p>
+<pre>GuiBuilder(<span class="s">"&amp;8ʜᴏᴍᴇꜱ"</span>, <span class="s">6</span>)
+    .frame()                                                   <span class="c">// theme panes on the edge, under everything else</span>
+    .header(headerItem)                                        <span class="c">// slot 4</span>
+    .list(GuiLayout.inner(<span class="s">6</span>), entries = { homesOf(player) }) { viewer, home -&gt;
+        GuiItem.button(icon(home)) { click -&gt;                   <span class="c">// click sound, then the action</span>
+            <span class="k">if</span> (click.isRight) manage(click.player, home) <span class="k">else</span> teleport(click.player, home)
+        }
+    }
+    .pageButtons()                                             <span class="c">// previous / next, only when there is such a page</span>
+    .backOrClose(back)                                         <span class="c">// back button, or close when back is null</span>
+    .pagedTitle()                                              <span class="c">// "Homes (2/3)" when there is more than one page</span>
+    .open(player)</pre>
+  <ul>
+    <li>Every click action gets a per-player cooldown (<code>gui.click-cooldown-ms</code> in config.yml, default 100; <code>clickCooldown(ms)</code> per GUI). The second half of a double-click is ignored.</li>
+    <li><code>GuiClick</code> (from <code>button</code>, <code>GuiItem.button</code>, <code>gui.click</code> or <code>PageContext.click</code>) has the player, click type, slot and GUI: <code>isLeft</code>, <code>isRight</code>, <code>isShift</code>, <code>isDrop</code>. Bedrock touch players can only tap (a left click), so every action must work with a left click.</li>
+    <li><code>GuiSounds.click / toggled(player, on) / denied / success</code> use the sounds in config.yml <code>gui.sounds</code>.</li>
+    <li><code>GuiTheme</code>: <code>frame()</code>, <code>corner()</code>, <code>pane(item)</code>, <code>button("back" | "close" | "previous" | "next")</code>, <code>text("status-on")</code>, <code>lines("toggle-hint")</code>. <code>GuiLayout</code>: <code>bottom(rows)</code>, <code>inner(rows)</code>, <code>pageCount</code>, <code>centered</code>.</li>
+    <li>A title with <code>{page}</code>/<code>{pages}</code> (or <code>pagedTitle()</code>) re-opens the GUI on a page change; items in input slots are kept and <code>onOpen</code>/<code>onClose</code> do not run.</li>
+    <li><code>GuiBuilder.refreshOpen { player -&gt; ... }</code> redraws the open ALB GUI of every matching player.</li>
+  </ul>
+</section>
+
+<section id="menus">
+  <h2>YAML menus</h2>
+  <p>A plugin can keep its menus in <code>plugins/&lt;Plugin&gt;/menus/&lt;id&gt;.yml</code>, so admins can change titles, items, slots and actions without a new jar. Built-in menus ship in the jar as <code>src/main/resources/menus/&lt;id&gt;.yml</code> and are copied when missing. Bump <code>revision:</code> in the jar copy when you redesign a menu: the server copy is kept as <code>&lt;id&gt;.old.yml</code> and replaced. The format is described at the top of ALBCore's <code>menus/common.yml</code>.</p>
+<pre>title: <span class="s">"&amp;8ʜᴏᴍᴇꜱ"</span>
+rows: <span class="s">6</span>
+fill: edges                       <span class="c"># none | edges | all</span>
+items:
+  header: { slot: <span class="s">4</span>, item: RED_BED, name: <span class="s">"&amp;#7DD3FC&amp;lHomes"</span>, lore: [<span class="s">"&amp;7{count}/{max} homes"</span>] }
+  add:
+    slot: <span class="s">51</span>
+    item: LIME_DYE
+    name: <span class="s">"&amp;#4ADE80+ New home"</span>
+    actions: [<span class="s">"[function] sethome"</span>]
+    permission: homes.set
+    locked: { hide: <span class="k">false</span>, item: GRAY_DYE, name: <span class="s">"&amp;8Rank needed"</span>, actions: [<span class="s">"[sound] entity.villager.no"</span>] }
+  back: { slot: <span class="s">49</span>, item: ARROW, name: <span class="s">"&amp;#7DD3FC← Back"</span>, actions: [<span class="s">"[back]"</span>] }
+list:
+  slots: <span class="s">"10-16,19-25,28-34"</span>
+  layout: centered
+  look:
+    home: { name: <span class="s">"&amp;f{name}"</span>, lore: [<span class="s">"&amp;7{world}"</span>, <span class="s">""</span>, <span class="s">"&amp;#7DD3FC» &amp;fClick &amp;7to go there"</span>] }</pre>
+<pre><span class="k">val</span> menus = Menus(<span class="k">this</span>, builtIn = listOf(<span class="s">"homes"</span>), lang = lang)
+menus.function(<span class="s">"sethome"</span>, permission = <span class="s">"homes.set"</span>) { click -&gt; askName(click.player) }
+menus.opener(<span class="s">"homes"</span>) { player, back -&gt; openHomes(player, back) }   <span class="c">// "[open] homes" runs this</span>
+
+<span class="k">fun</span> openHomes(player: Player, back: ((Player) -&gt; Unit)?) {
+    <span class="k">val</span> def = menus.get(<span class="s">"homes"</span>)
+    menus.open(player, def, MenuContext(
+        back = back,
+        placeholders = { listOf(<span class="s">"count"</span> to homesOf(it).size, <span class="s">"max"</span> to maxHomes(it)) },
+        entries = { homesOf(player).map { home -&gt;
+            MenuEntry({ v -&gt; def.entry(<span class="s">"home"</span>, <span class="k">null</span>, ItemStack(Material.RED_BED), listOf(<span class="s">"name"</span> to home.name, <span class="s">"world"</span> to home.world), viewer = v) }) {
+                click -&gt; teleport(click.player, home)
+            }
+        } },
+    ))
+}</pre>
+  <table>
+    <tr><th>Action</th><th>Does</th></tr>
+    <tr><td><code>[close]</code>, <code>[back]</code></td><td>Close the menu / go to the menu it was opened from.</td></tr>
+    <tr><td><code>[open] &lt;menu&gt;</code>, <code>[open] &lt;plugin&gt;:&lt;menu&gt;</code></td><td>Another menu (its <code>opener</code> if one is registered, else the file as it is).</td></tr>
+    <tr><td><code>[next-page]</code>, <code>[previous-page]</code>, <code>[refresh]</code></td><td>Page of the list area (the item hides when there is no such page) / redraw.</td></tr>
+    <tr><td><code>[function] &lt;id&gt;</code></td><td>Plugin code: <code>MenuContext.functions</code>, then <code>menus.function</code>. Its permission is checked first.</td></tr>
+    <tr><td><code>[player] &lt;cmd&gt;</code>, <code>[console] &lt;cmd&gt;</code>, <code>[message] &lt;text&gt;</code>, <code>[sound] &lt;key&gt; [volume] [pitch]</code></td><td>Commands, a chat message, a sound. Without a <code>[sound]</code> the theme click sound plays.</td></tr>
+  </table>
+  <p>Placeholders: <code>{player}</code>, <code>{prefix}</code>, <code>{page}</code>, <code>{pages}</code> and the menu's own. A lore line that is only a list placeholder becomes one line per value. <code>item-data: "data:&lt;base64&gt;"</code> keeps an exact item (Nexo items). ALBCore has no in-game menu editor.</p>
+</section>
+
+<section id="lang">
+  <h2>Lang</h2>
+  <p><code>Lang(plugin)</code> reads <code>plugins/&lt;Plugin&gt;/lang.yml</code> (copied from the jar). Missing keys fall back to the jar's copy, then to the key itself. <code>{prefix}</code> is the file's <code>prefix</code> key; placeholder values are escaped so player names cannot inject MiniMessage tags.</p>
+<pre><span class="k">val</span> lang = Lang(<span class="k">this</span>)
+lang.send(player, <span class="s">"home.created"</span>, <span class="s">"name"</span> to home.name)   <span class="c">// home.created: "[actionbar] &amp;aHome &amp;f{name} &amp;acreated."</span>
+<span class="k">val</span> lore = lang.lines(<span class="s">"home.lore"</span>, <span class="s">"warps"</span> to listOf(<span class="s">"&amp;7Spawn"</span>, <span class="s">"&amp;7Shop"</span>))</pre>
+  <ul>
+    <li>A text may start with <code>[chat]</code>, <code>[actionbar]</code>, <code>[title]</code>, <code>[bossbar]</code> or <code>[off]</code>.</li>
+    <li>Bump <code>lang-version</code> in the jar copy when you redesign the texts: the server file is kept as <code>lang-old-&lt;n&gt;.yml</code> and replaced. New keys are added to the server file automatically.</li>
+  </ul>
+</section>
+
+<section id="chatinput">
+  <h2>Chat input</h2>
+  <p>Ask a player to type something in chat. It works for Bedrock players too, unlike anvil or sign input.</p>
+<pre>ChatInput.ask(plugin, player, prompt = <span class="s">"&amp;7Type a name for the home."</span>, onCancel = { openHomes(it, <span class="k">null</span>) }) { text -&gt;
+    <span class="k">if</span> (text.length &gt; <span class="s">16</span>) { lang.send(player, <span class="s">"home.too-long"</span>); <span class="k">false</span> }   <span class="c">// keep asking</span>
+    <span class="k">else</span> { createHome(player, text); openHomes(player, <span class="k">null</span>); <span class="k">true</span> }     <span class="c">// done</span>
+}</pre>
+  <ul>
+    <li>The open menu is closed, the prompt and a cancel hint are sent, and the player's chat message is cancelled and handed to your code on the main thread.</li>
+    <li>Typing a cancel word (<code>chat-input.cancel-words</code> in ALBCore's lang.yml, default <code>cancel</code>) or the timeout (default 60 s) runs <code>onCancel</code>.</li>
+    <li>The text is raw player input: validate it, and escape it with <code>ColorUtil.escape</code> before showing it to others.</li>
+  </ul>
 </section>
 
 <section id="commands">
@@ -526,7 +624,7 @@ DiscordLogger.on(<span class="s">"staff"</span>).embed {
   <table>
     <tr><th>Command</th><th>Does</th></tr>
     <tr><td><code>/albcore</code>, <code>/albcore info</code></td><td>Version, database type and pool, player-data storage, hooks, placeholders, webhooks.</td></tr>
-    <tr><td><code>/albcore reload</code></td><td>Reloads webhooks, autosave interval and messages.</td></tr>
+    <tr><td><code>/albcore reload</code></td><td>Reloads webhooks, autosave interval, messages, the <code>gui</code> settings, <code>lang.yml</code> and <code>menus/</code>.</td></tr>
     <tr><td><code>/albcore playerdata save</code></td><td>Saves all loaded player data now.</td></tr>
     <tr><td><code>/albcore playerdata import &lt;yaml|sqlite|mysql&gt;</code></td><td>Copies all player data from that storage into the current one.</td></tr>
   </table>
@@ -534,20 +632,16 @@ DiscordLogger.on(<span class="s">"staff"</span>).embed {
 
 <section id="develop">
   <h2>Developing ALBCore</h2>
-<pre>./gradlew build                 <span class="c"># tests + build/libs/alb-core-1.0.0.jar</span>
+<pre>./gradlew build                 <span class="c"># tests + build/libs/alb-core-&lt;version&gt;.jar</span>
 ./gradlew test                  <span class="c"># JUnit 6</span>
 ./gradlew publishToMavenLocal   <span class="c"># API jar for child plugins</span></pre>
   <ul>
     <li>Database tests run on SQLite every time. Set <code>ALBCORE_TEST_MYSQL_HOST</code> (and optionally <code>_PORT</code>, <code>_DATABASE</code>, <code>_USER</code>, <code>_PASSWORD</code>) to run them against MySQL too. Use a throwaway database.</li>
     <li>HikariCP is shaded and relocated. The Kotlin runtime is shaded but not relocated, so child plugins can share it. Paper already provides the MySQL/SQLite drivers, Gson and SLF4J.</li>
-    <li>When the public API changes, update <code>MIGRATION.md</code>, this page and <code>.claude/skills/albcore/SKILL.md</code>.</li>
+    <li>When the public API changes, update this page and <code>.claude/skills/albcore/SKILL.md</code>.</li>
   </ul>
 </section>
 
-<section id="upgrade">
-  <h2>Upgrading from 0.1.0</h2>
-  <p>1.0.0 renames a few classes and methods (<code>PlayerDataUtil</code> → <code>PlayerData</code>, <code>AveragePrice</code> → <code>PriceRegistry</code>, Vault method names, and more) and fixes several GUI exploits. The full list is in <a href="https://github.com/aayankhaan/ALB-Core/blob/master/MIGRATION.md">MIGRATION.md</a>.</p>
-</section>
 </main>
 </div>
 <script>

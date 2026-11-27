@@ -1,0 +1,43 @@
+# ALBCore messages and the shared menu texts of every ALB plugin.
+# Text accepts & colour codes, &#rrggbb and MiniMessage. {prefix} is replaced by the prefix below.
+# A message may start with [chat], [actionbar], [title], [bossbar] or [off] to choose where it shows up.
+# Bedrock players see the same text: keep lines short and use the 16 classic colours for important words.
+
+# Bumped when these texts are redesigned: an older lang.yml is saved as lang-old-<n>.yml and replaced.
+lang-version: 1
+
+prefix: "<gradient:#7DD3FC:#A78BFA><b>ꜱᴋʏᴀʙʏꜱꜱ</b></gradient> &8» &7"
+
+gui:
+  # Title of a menu with more than one page.
+  paged-title: "{title} &8({page}/{pages})"
+  # Pieces for menu item lore (GuiTheme.text / GuiTheme.lines), so every plugin's toggles look the same.
+  status-on: "&8▪ &7Status: &#4ADE80On"
+  status-off: "&8▪ &7Status: &#F87171Off"
+  status-allowed: "&8▪ &7Status: &#4ADE80Allowed"
+  status-denied: "&8▪ &7Status: &#F87171Denied"
+  choice-current: " &#4ADE80▶ &f{value}"
+  choice-other: " &8▷ &7{value}"
+  toggle-hint:
+    - ""
+    - "&#7DD3FC» &fClick &7to toggle"
+  cycle-hint:
+    - ""
+    - "&#7DD3FC» &fClick &7to change"
+  open-hint:
+    - ""
+    - "&#7DD3FC» &fClick &7to open"
+
+menus:
+  # {what} = the menu or function id.
+  missing: "{prefix}&#F87171✖ &7That is not available right now."
+  no-permission: "{prefix}&#F87171✖ &7You don't have permission to do that."
+
+chat-input:
+  # Words that end a "type it in chat" question. Case is ignored.
+  cancel-words:
+    - "cancel"
+  # Sent after the question's own prompt. {word} = the first cancel word.
+  hint: "&8Type &f{word} &8to stop."
+  cancelled: "{prefix}&7Cancelled."
+  timed-out: "{prefix}&7You took too long, so it was cancelled."

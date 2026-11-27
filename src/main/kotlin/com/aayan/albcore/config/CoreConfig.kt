@@ -22,11 +22,37 @@ data class WebhookSettings(val url: String, val username: String, val avatarUrl:
     override fun toString(): String = "WebhookSettings(url=***, username=$username)"
 }
 
+/** A menu sound: a sound key with volume and pitch. A blank [key] plays nothing. */
+data class GuiSound(val key: String, val volume: Float = 1f, val pitch: Float = 1f) {
+    companion object {
+        /** "minecraft:ui.button.click 0.4 1.2" (volume and pitch optional), or "" / "none" for no sound. Null if invalid. */
+        fun parse(raw: String): GuiSound? {
+            val parts = raw.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+            if (parts.isEmpty() || parts[0].equals("none", ignoreCase = true)) return GuiSound("")
+            if (parts.size > 3 || !Regex("[a-z0-9_.-]+(:[a-z0-9_./-]+)?").matches(parts[0])) return null
+            val volume = parts.getOrNull(1)?.toFloatOrNull() ?: if (parts.size > 1) return null else 1f
+            val pitch = parts.getOrNull(2)?.toFloatOrNull() ?: if (parts.size > 2) return null else 1f
+            return GuiSound(parts[0], volume, pitch)
+        }
+    }
+}
+
+/** Menu settings from the `gui` section. */
+data class GuiSettings(
+    val clickCooldownMs: Long = 100,
+    val click: GuiSound = GuiSound("minecraft:ui.button.click", 0.4f, 1.2f),
+    val toggleOn: GuiSound = GuiSound("minecraft:block.note_block.pling", 0.5f, 1.7f),
+    val toggleOff: GuiSound = GuiSound("minecraft:block.note_block.pling", 0.5f, 0.9f),
+    val denied: GuiSound = GuiSound("minecraft:entity.villager.no", 0.5f, 1.1f),
+    val success: GuiSound = GuiSound("minecraft:entity.player.levelup", 0.5f, 1.6f),
+)
+
 /** ALBCore's config.yml, parsed and validated. Invalid values fall back to defaults with a warning. */
 data class CoreConfig(
     val database: DatabaseSettings,
     val playerData: PlayerDataSettings,
     val webhooks: Map<String, WebhookSettings>,
+    val gui: GuiSettings = GuiSettings(),
 ) {
     companion object {
         const val CURRENT_VERSION = 1
@@ -44,6 +70,30 @@ data class CoreConfig(
                 database = loadDatabase(config, dataFolder, warn),
                 playerData = loadPlayerData(config, warn),
                 webhooks = loadWebhooks(config, warn),
+                gui = loadGui(config, warn),
+            )
+        }
+
+        private fun loadGui(config: ConfigurationSection, warn: (String) -> Unit): GuiSettings {
+            val defaults = GuiSettings()
+            var cooldown = config.getLong("gui.click-cooldown-ms", defaults.clickCooldownMs)
+            if (cooldown < 0) {
+                warn("gui.click-cooldown-ms must be 0 or more (got $cooldown). Using ${defaults.clickCooldownMs}.")
+                cooldown = defaults.clickCooldownMs
+            }
+            fun sound(name: String, default: GuiSound): GuiSound {
+                val raw = config.getString("gui.sounds.$name") ?: return default
+                return GuiSound.parse(raw) ?: default.also {
+                    warn("gui.sounds.$name '$raw' is not valid (use \"<sound key> [volume] [pitch]\" or \"\"). Using the default.")
+                }
+            }
+            return GuiSettings(
+                clickCooldownMs = cooldown,
+                click = sound("click", defaults.click),
+                toggleOn = sound("toggle-on", defaults.toggleOn),
+                toggleOff = sound("toggle-off", defaults.toggleOff),
+                denied = sound("denied", defaults.denied),
+                success = sound("success", defaults.success),
             )
         }
 

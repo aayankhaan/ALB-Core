@@ -11,6 +11,10 @@ import com.aayan.albcore.data.YamlPlayerDataStorage
 import com.aayan.albcore.database.Database
 import com.aayan.albcore.gui.GuiBuilder
 import com.aayan.albcore.gui.GuiListener
+import com.aayan.albcore.gui.GuiTheme
+import com.aayan.albcore.input.ChatInput
+import com.aayan.albcore.lang.Lang
+import com.aayan.albcore.menu.Menus
 import com.aayan.albcore.hooks.PAPIHook
 import com.aayan.albcore.hooks.PacketEventsHook
 import com.aayan.albcore.hooks.VaultHook
@@ -33,7 +37,8 @@ import java.util.logging.Level
  * Child plugins add `depend: [ALBCore]` to their plugin.yml and then use:
  * - [database] for their own tables (see [Database]),
  * - [com.aayan.albcore.data.PlayerData] for simple per-player values,
- * - the GUI, command, hook and util APIs directly.
+ * - [lang] / [menus] for the shared menu look (see [GuiTheme]), and [Lang] / [Menus] for their own files,
+ * - the GUI, chat input, command, hook and util APIs directly.
  *
  * If the database cannot be reached at startup, ALBCore disables itself, and its classes can no longer
  * be loaded by other plugins. Dependents should start `onEnable` with
@@ -60,6 +65,14 @@ class ALBCore : JavaPlugin() {
     lateinit var playerData: PlayerDataService
         private set
 
+    /** ALBCore's lang.yml: its own messages and the shared menu texts (`gui.*`, see [GuiTheme]). */
+    lateinit var lang: Lang
+        private set
+
+    /** ALBCore's menus folder: `common.yml` holds the shared menu look (see [GuiTheme]). */
+    lateinit var menus: Menus
+        private set
+
     private var autosaveTask: BukkitTask? = null
 
     override fun onEnable() {
@@ -81,12 +94,16 @@ class ALBCore : JavaPlugin() {
             return
         }
 
+        lang = Lang(this)
+        menus = Menus(this, builtIn = listOf(GuiTheme.COMMON))
+
         val vault = VaultHook.setup()
         val papi = PAPIHook.setup(this)
         val packets = PacketEventsHook.setup()
 
         registerWebhooks()
         server.pluginManager.registerEvents(GuiListener(), this)
+        server.pluginManager.registerEvents(ChatInput.ChatListener(), this)
         server.pluginManager.registerEvents(
             PlayerDataListener(playerData, logger, coreConfig.playerData.loadTimeoutSeconds) {
                 coreConfig.playerData.loadFailedMessage
@@ -107,17 +124,21 @@ class ALBCore : JavaPlugin() {
             .filter { it.openInventory.topInventory.getHolder(false) is GuiBuilder }
             .forEach { it.closeInventory() }
         PacketEventsHook.unregisterEverything()
+        ChatInput.clear()
         if (::playerData.isInitialized) playerData.close(30)
         if (::database.isInitialized) database.close(30)
         DiscordLogger.clear()
     }
 
     /**
-     * Re-reads config.yml. Webhooks, autosave interval and messages apply at once; database and
-     * player-data storage changes need a restart. Returns the warnings to show to the sender.
+     * Re-reads config.yml, lang.yml and menus/. Webhooks, autosave interval, messages and menu settings
+     * apply at once; database and player-data storage changes need a restart. Returns the warnings to
+     * show to the sender.
      */
     fun reloadSettings(): List<String> {
         reloadConfig()
+        lang.reload()
+        menus.reload()
         val warnings = mutableListOf<String>()
         val fresh = CoreConfig.load(config, dataFolder) { warnings += it }
         if (fresh.database != coreConfig.database || fresh.playerData.storage != coreConfig.playerData.storage) {
@@ -225,6 +246,8 @@ class ALBCore : JavaPlugin() {
             PAPIHook.unregisterAll(event.plugin)
             PriceRegistry.unregisterAll(event.plugin)
             PacketEventsHook.unregisterAll(event.plugin)
+            ChatInput.unregisterAll(event.plugin)
+            Menus.unregisterAll(event.plugin)
         }
     }
 }

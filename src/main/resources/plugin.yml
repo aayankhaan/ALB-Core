@@ -3,7 +3,7 @@ version: '${version}'
 main: com.aayan.albcore.ALBCore
 api-version: '26.3'
 author: Aayan
-description: Base framework for the ALB plugins (GUI, commands, database, player data).
+description: Base framework for the ALB plugins (GUI and YAML menus, commands, lang, chat input, database, player data).
 softdepend:
   - Vault
   - PlaceholderAPI

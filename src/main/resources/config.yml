@@ -1,7 +1,7 @@
 # ALBCore configuration
 #
 # Restart the server after changing the database or player-data sections.
-# "/albcore reload" only reloads the Discord webhooks.
+# "/albcore reload" reloads everything else (webhooks, gui, lang.yml, menus/common.yml).
 #
 # This file contains passwords and webhook URLs. It lives on the server only: never commit it to git.
 
@@ -56,6 +56,20 @@ player-data:
 
   # Shown to a player whose data could not be loaded (they are not let in, so nothing is overwritten).
   load-failed-message: "&cYour player data could not be loaded. Please try again in a moment."
+
+gui:
+  # Clicks of one player on menu buttons that come closer together than this are ignored
+  # (one fast double tap must not buy twice). 0 = off.
+  click-cooldown-ms: 100
+  # Menu sounds of every ALB plugin: "<sound key> <volume> <pitch>", or "" for no sound.
+  sounds:
+    click: "minecraft:ui.button.click 0.4 1.2"
+    toggle-on: "minecraft:block.note_block.pling 0.5 1.7"
+    toggle-off: "minecraft:block.note_block.pling 0.5 0.9"
+    denied: "minecraft:entity.villager.no 0.5 1.1"
+    success: "minecraft:entity.player.levelup 0.5 1.6"
+  # The look of the menus (frame, back / close / page buttons) is in menus/common.yml,
+  # shared texts (status lines, click hints) in lang.yml.
 
 discord:
   # Named webhooks for DiscordLogger.on("<name>"). Webhook URLs are secrets.

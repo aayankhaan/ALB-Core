@@ -10,8 +10,8 @@ Bedrock players through Geyser/Floodgate). Child plugins depend on it and use it
 writing their own GUI, command, database or player-data code.
 
 - Repo: `Skyabyss/ALB-Core` (git, https://github.com/aayankhaan/ALB-Core). Kotlin in `src/main/kotlin/com/aayan/albcore`.
-- Version 1.0.0. Paper API `io.papermc.paper:paper-api:26.3.build.252-stable`, Java 25, Kotlin 2.4.21, Gradle 9.9.1 wrapper.
-- Human docs: `docs/index.html`. Breaking changes from 0.1.0: `MIGRATION.md`.
+- Version 1.1.0. Paper API `io.papermc.paper:paper-api:26.3.build.252-stable`, Java 25, Kotlin 2.4.21, Gradle 9.9.1 wrapper.
+- Human docs: `docs/index.html`.
 - Project design (wins over the old `Cloode/` docs): `Skyabyss/DECISIONS.md`, section 4 lists the plugins and how they connect.
 
 Planned child plugins: ALBSkills, ALBItems, ALBDungeon, ALBQuests, ALBIslands, ALBChat, ALBRewards. All share
@@ -19,7 +19,7 @@ one MySQL database (eco plugins use the same server with their own tables).
 
 Planned for ALBCore itself (add them here, never as private copies in a child plugin): coins as the Vault
 economy provider, the NPC system (entity + optional ModelEngine model + click handler), Bedrock forms
-(Floodgate) for confirms and short lists, language files, and an event bus between ALB plugins.
+(Floodgate) for confirms and short lists, and an event bus between ALB plugins.
 
 ## Child plugin setup
 
@@ -33,7 +33,7 @@ repositories {
 }
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.3.build.252-stable")
-    compileOnly("com.aayan:alb-core:1.0.0")
+    compileOnly("com.aayan:alb-core:1.1.0")
     compileOnly(kotlin("stdlib"))   // ALBCore ships the Kotlin runtime: never shade Kotlin in a child plugin
 }
 kotlin { jvmToolchain(25) }
@@ -143,25 +143,124 @@ Paths are dotted YAML paths. Namespace them per plugin (`skills.*`, `level.*`). 
 
 ## GUI (`com.aayan.albcore.gui`)
 
+Two levels: `GuiBuilder` in code, or YAML menus (`Menus`, next section) that admins can restyle.
+Every ALB menu follows one theme (`GuiTheme`, look in `plugins/ALBCore/menus/common.yml`, texts in
+`plugins/ALBCore/lang.yml` `gui.*`): cyan frame on the edge, header in slot 4, back/close at the bottom
+centre (`GuiLayout.bottom(rows)`), previous/next page one slot left/right of it. The `alb-gui-theme`
+skill in the Skyabyss folder has the full look and text rules.
+
 ```kotlin
-val gui = GuiBuilder("&8Skills", 6)           // title supports & codes, MiniMessage, PAPI; rows 1..6
-gui.global {                                  // shown on every page
-        item(45) { _, ctx -> GuiItem(prevItem) { _, c -> c.previousPage() } }
-        item(53) { _, ctx -> GuiItem(if (ctx.hasNextPage) nextItem else filler) { _, c -> c.nextPage() } }
+GuiBuilder("&8ʜᴏᴍᴇꜱ", 6)
+    .frame()                                       // theme panes on the edge (GuiFill.ALL = every slot); under everything else
+    .header(headerItem)                            // slot 4, no action
+    .list(GuiLayout.inner(6), ListLayout.CENTERED, entries = { homesOf(player) }) { viewer, home ->
+        GuiItem.button(icon(home)) { click ->      // click sound, then the action; entries re-read on refresh()
+            if (click.isRight) manage(click.player, home) else teleport(click.player, home)   // left click must work (Bedrock)
+        }
     }
-    .page { item(10..16) { player, ctx -> GuiItem(skillIcon(player)) { p, c -> openSkill(p); c.refresh() } } }
-    .page { item(10) { _, _ -> GuiItem(pageTwoIcon) } }
-    .setItem(49, { player -> infoItem(player) }) { player -> player.closeInventory() }   // fixed slot
-    .allowItemPlacement(19..25) { item -> item.type == Material.DIAMOND }               // input slots + filter
-    .onClose { player -> giveBack(player, gui.getItems(19..25)) }   // separate statement, so `gui` exists
-    .refreshEvery(20)                                                                    // ticks, only while open
-gui.open(player)
+    .button(GuiLayout.bottom(6) + 3, addItem) { click -> askName(click.player) }   // GuiClick: player, type, slot, gui, page
+    .pageButtons()                                 // theme previous/next, shown only when there is such a page
+    .backOrClose(back)                             // theme back button, or close when back == null
+    .pagedTitle()                                  // "title (2/3)" (lang gui.paged-title) when > 1 page
+    .open(player)                                  // or open(player, page)
 ```
-`PageContext`: `currentPage`, `totalPages`, `hasNextPage`, `hasPreviousPage`, `nextPage()`,
-`previousPage()`, `goTo(i)`, `refresh()`. `GuiBuilder`: `refresh()`, `goToPage(i)`, `close()`, `isOpen()`,
-`viewer`, `getItems(...)`, `addItem(s)`, `clearItems(range)`. Items in input slots survive `refresh()`;
-return them to the player in `onClose` (ALBCore does not). All other slots are locked (shift-click,
-double-click, number keys and drags are handled).
+Lower level (still supported): `global { item(slot) { player, ctx -> GuiItem(item) { p, c -> } } }`,
+`page { }` (fixed pages), `setItem(slot, { player -> item }) { player -> }`, `setItems(...)`,
+`allowItemPlacement(19..25) { item -> filter }` (input slots), `onOpen`, `onClose`, `refreshEvery(ticks)`.
+
+- Clicks: a per-player cooldown (config `gui.click-cooldown-ms`, default 100; per GUI `clickCooldown(ms)`)
+  and the second half of a double-click are ignored for every action. `gui.click` / `PageContext.click`
+  is the `GuiClick` being handled (`isLeft`, `isRight`, `isShift`, `isDrop` = Q).
+- Sounds: `GuiSounds.click/toggled(player, on)/denied/success` (config `gui.sounds`). `button` and
+  `GuiItem.button` play the click sound unless `sound = false` (toggles play `toggled` themselves).
+- Theme pieces: `GuiTheme.frame()`, `corner(bottom)`, `filler(slot, rows)`, `pane(item)` (no tooltip),
+  `button("back" | "close" | "previous" | "next", "page" to n)`, `pagedTitle(...)`,
+  `text("status-on" | "status-off" | "choice-current", "value" to x)`, `lines("toggle-hint" | "cycle-hint" | "open-hint")`.
+- `GuiLayout`: `HEADER`, `bottom(rows)`, `inner(rows)`, `isEdge`, `corners`, `pageCount`, `centered(slots, n)`.
+- Page changes refresh in place; when the title shows the page (`{page}`/`{pages}` or `pagedTitle()`), the
+  GUI re-opens with the new title (input-slot items kept, `onOpen`/`onClose` not run).
+- `GuiBuilder.refreshOpen { player -> inTeam(player) }` redraws everyone's open ALB GUI that matches.
+- `PageContext`: `currentPage`, `totalPages`, `hasNextPage`, `hasPreviousPage`, `nextPage()`,
+  `previousPage()`, `goTo(i)`, `refresh()`, `click`, `gui`. `GuiBuilder`: `refresh()`, `goToPage(i)`,
+  `close()`, `isOpen()`, `viewer`, `rows`, `getItems(...)`, `addItem(s)`, `clearItems(range)`.
+- Items in input slots survive `refresh()`; return them to the player in `onClose` (ALBCore does not).
+  All other slots are locked (shift-click, double-click, number keys and drags are handled).
+
+## YAML menus (`com.aayan.albcore.menu`)
+
+Each plugin keeps its menus in `plugins/<Plugin>/menus/<id>.yml` (format: header of ALBCore's
+`menus/common.yml`). Built-in ones ship in the jar as `src/main/resources/menus/<id>.yml` and are
+copied when missing; bump `revision:` in the jar copy when you redesign one (the server copy is then
+kept as `<id>.old.yml` and replaced). Any other `.yml` an admin drops there is a custom menu.
+
+```kotlin
+val lang = Lang(this)
+val menus = Menus(this, builtIn = listOf("homes"), lang = lang)          // onEnable; {prefix} comes from lang
+menus.function("sethome", permission = "homes.set") { click -> askName(click.player) }   // "[function] sethome" in any menu
+menus.opener("homes") { player, back -> openHomes(player, back) }        // "[open] homes" runs your code
+
+fun openHomes(player: Player, back: ((Player) -> Unit)?) {
+    val def = menus.get("homes")
+    menus.open(player, def, MenuContext(
+        back = back,                                                     // "[back]" target (null: close)
+        placeholders = { viewer -> listOf("count" to homesOf(viewer).size, "max" to maxHomes(viewer)) },
+        entries = { homesOf(player).map { home ->                        // list.slots area, paged
+            MenuEntry({ viewer -> def.entry("home", home.world, ItemStack(Material.RED_BED), listOf("name" to home.name), viewer = viewer) }) { click ->
+                teleport(click.player, home)
+            }
+        } },
+        functions = mapOf("toggle-public" to MenuFunction(               // this menu's own function; glow when on
+            decorate = { Decoration(glow = isPublic(it)) },
+        ) { click -> togglePublic(click.player); GuiSounds.toggled(click.player, isPublic(click.player)); click.gui.refresh() }),
+    ))
+}
+```
+- Actions, run in order: `[close]`, `[back]`, `[open] <menu>` / `[open] <plugin>:<menu>`, `[next-page]`,
+  `[previous-page]`, `[refresh]`, `[function] <id>`, `[player] <cmd>`, `[console] <cmd>`, `[message] <text>`,
+  `[sound] <key> [volume] [pitch]`. No `[sound]` = theme click sound. Page buttons hide when there is no page.
+- Item `permission:` + `locked:` (`hide: true`, or a look and actions for players without it). Several
+  items may share a slot; the first one the viewer can see shows. `PLAYER_HEAD` without item-data shows
+  `MenuContext.head` or the viewer's head. `item-data: "data:<base64>"` keeps exact items (Nexo).
+- Placeholders `{player}`, `{prefix}`, `{page}`, `{pages}`, plus `MenuContext.placeholders`; a lore line
+  that is only a list placeholder becomes one line per value. PlaceholderAPI works in names and lore.
+- `menus.build(player, id, ctx)` gives the `GuiBuilder` unopened (add more, then `open`).
+- `MenuDef` data: `title`, `rows`, `fill`, `items`, `listSlots`, `listLayout`, `templates`, `icons`,
+  `item(id, placeholders)`, `entry(template, iconKey, fallback, placeholders)`, `iconOr(key, material)`,
+  `save()`, `reset()`. ALBCore has no in-game menu editor; a plugin may build its own on this data.
+
+## Lang (`com.aayan.albcore.lang`)
+
+```kotlin
+val lang = Lang(this)                               // plugins/<Plugin>/lang.yml, copied from the jar
+lang.send(player, "home.created", "name" to home.name)
+lang.raw("home.title")   lang.lines("home.lore", "warps" to listOf("&7Spawn"))   lang.component(key)
+```
+- `{prefix}` = the file's `prefix` key. Placeholder values are escaped (single values only; list values
+  are code-built lines). `{{x}}` stays the literal `{x}`. Missing keys fall back to the jar, then the key.
+- A text may start with `[chat]`, `[actionbar]`, `[title]`, `[bossbar]` or `[off]` (`MessageMode`).
+  `lang.titleTimes`, `bossBarSeconds`, `bossBarColor`. PlaceholderAPI works in `send` to players.
+- Bump `lang-version` in the jar file when you redesign the texts: the server file is kept as
+  `lang-old-<n>.yml` and replaced. New keys are added to the server file; removed keys are dropped.
+- `lang.duration(ms)` uses your `time.hours` / `time.minutes` / `time.seconds` keys (`{h} {m} {s}`).
+- `addSource(file, defaults)` reads some top-level sections from another file (add-ons).
+  `keys`, `text`, `setText`, `setLines`, `setMode` let a plugin edit texts in game.
+
+## Chat input (`com.aayan.albcore.input`)
+
+"Type it in chat" questions (Bedrock-safe; never use anvil or sign input):
+```kotlin
+ChatInput.ask(plugin, player, prompt = "&7Type a name for the home.", onCancel = { openHomes(it, null) }) { text ->
+    if (!Regex("[A-Za-z0-9_]{1,16}").matches(text)) { lang.send(player, "home.bad-name"); false }   // keep asking
+    else { createHome(player, text); openHomes(player, null); true }                                // done
+}
+```
+- Closes the open menu (`closeInventory = false` to keep it), sends the prompt and the cancel hint
+  (ALBCore lang `chat-input.*`), cancels the chat message (LOWEST priority), runs the handler on the main
+  thread. Cancel words (default `cancel`) and the timeout (`timeoutSeconds`, default 60) run `onCancel`.
+- `isWaiting(player)`, `cancel(player)` (runs onCancel), `close(player)` (silent). A new question
+  replaces an open one. Questions end silently on quit and when the asking plugin disables.
+- The text is raw player input: `ColorUtil.escape` it before showing it, validate it before saving.
+  Chat plugins must ignore cancelled chat events, or they would broadcast answers.
 
 ## Commands (`com.aayan.albcore.commands`)
 
@@ -221,14 +320,14 @@ keep menus readable from item names and lore alone.
 
 ## Working on ALBCore itself
 
-- Build: `./gradlew build` (tests + shaded jar `build/libs/alb-core-1.0.0.jar`), API for child plugins:
+- Build: `./gradlew build` (tests + shaded jar `build/libs/alb-core-<version>.jar`), API for child plugins:
   `./gradlew publishToMavenLocal`. Hikari is shaded and relocated to `com.aayan.albcore.libs.hikari`;
   Kotlin stdlib is shaded **unrelocated** on purpose (children use it, and the API exposes Kotlin function
   types). Paper 26.3 already bundles the MySQL and SQLite JDBC drivers, Gson and SLF4J; do not shade them.
 - Tests: JUnit 6 in `src/test/kotlin`. `DatabaseContractTest` runs on SQLite always and on MySQL when
   `ALBCORE_TEST_MYSQL_HOST` (+ `_PORT`, `_DATABASE`, `_USER`, `_PASSWORD`) is set.
 - Local server: `Skyabyss/test_server` (Paper 26.3 build 252, port 25599). Copy the jar to `plugins/`.
-- Keep public API changes in `MIGRATION.md`, `docs/index.html` and this file in sync.
+- Keep public API changes in `docs/index.html` and this file in sync.
 - Docs are hosted at https://aayankhaan.github.io/ALB-Core/ (GitHub Pages serving `docs/` on `master`).
 - Release: set `version` in `build.gradle.kts`, merge to `master`, then push tag `v<version>`;
   `.github/workflows/release.yml` builds, tests and publishes the GitHub Release with the jars.
