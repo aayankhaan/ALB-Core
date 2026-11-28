@@ -47,7 +47,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.3.build.252-stable")
-    compileOnly("com.aayan:alb-core:1.1.0")
+    compileOnly("com.aayan:alb-core:1.2.0")
     compileOnly(kotlin("stdlib")) // ALBCore ships the Kotlin runtime; do not shade your own
 }
 

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.aayan"
-version = "1.1.0"
+version = "1.2.0"
 
 val paperVersion = "26.3.build.252-stable"
 

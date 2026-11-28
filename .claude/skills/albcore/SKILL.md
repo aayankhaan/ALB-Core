@@ -10,7 +10,7 @@ Bedrock players through Geyser/Floodgate). Child plugins depend on it and use it
 writing their own GUI, command, database or player-data code.
 
 - Repo: `Skyabyss/ALB-Core` (git, https://github.com/aayankhaan/ALB-Core). Kotlin in `src/main/kotlin/com/aayan/albcore`.
-- Version 1.1.0. Paper API `io.papermc.paper:paper-api:26.3.build.252-stable`, Java 25, Kotlin 2.4.21, Gradle 9.9.1 wrapper.
+- Version 1.2.0. Paper API `io.papermc.paper:paper-api:26.3.build.252-stable`, Java 25, Kotlin 2.4.21, Gradle 9.9.1 wrapper.
 - Human docs: `docs/index.html`.
 - Project design (wins over the old `Cloode/` docs): `Skyabyss/DECISIONS.md`, section 4 lists the plugins and how they connect.
 
@@ -33,7 +33,7 @@ repositories {
 }
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.3.build.252-stable")
-    compileOnly("com.aayan:alb-core:1.1.0")
+    compileOnly("com.aayan:alb-core:1.2.0")
     compileOnly(kotlin("stdlib"))   // ALBCore ships the Kotlin runtime: never shade Kotlin in a child plugin
 }
 kotlin { jvmToolchain(25) }
@@ -311,6 +311,8 @@ Builder: `onMissingArgs { sender, usage -> }`, `onUnknownSubcommand { sender, op
 - `MessageUtil.send(sender, text)`, `sendWithPAPI(player, text)`, `actionBar`, `sendTitle(player, title, subtitle, fadeIn, stay, fadeOut)` (ms), `broadcast(text, permission?)`.
 - `ItemBuilder(Material.X).name("&b..").lore("..", "..").addLore(list).amount(n).enchant(e, lvl).flag(..).glow().unbreakable().data(key, type, value).ignoreAlbLore().meta { }.build()`
   (non-italic by default; pass a player to `name(player, text)`/`lore(player, ...)` for placeholders).
+- `BedrockUtil.isBedrock(player)` (Floodgate/Geyser by reflection; false without them): send Bedrock
+  players plain text instead of glyphs, hover text or text displays.
 - `HeadUtil.fromBase64(texture)`, `fromPlayerName(name)`, `fromPlayer(offlinePlayer)`.
 - `NumberUtil.formatNumber(1500L) == "1.5K"`, `formatNumber(1234.5) == "1.23K"`, `formatComma(1234567) == "1,234,567"`, `parseNumber("2.5m") == 2500000L` (null if invalid).
 - `SoundUtil.play(player, "minecraft:entity.experience_orb.pickup", volume, pitch)`, `broadcast(...)`.

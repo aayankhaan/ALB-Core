@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ALBCore Docs</title>
-<meta name="description" content="ALBCore 1.1.0: the base framework for ALB plugins on Paper 26.3 (GUI and YAML menus, lang, chat input, commands, database, player data, hooks, utilities).">
+<meta name="description" content="ALBCore 1.2.0: the base framework for ALB plugins on Paper 26.3 (GUI and YAML menus, lang, chat input, commands, database, player data, hooks, utilities).">
 <style>
 :root {
   --bg: #fbfaf7;
@@ -123,7 +123,7 @@ th { background: var(--panel); }
 <div class="layout">
 <nav class="sidebar" id="sidebar">
   <div class="brand">ALB<span>Core</span></div>
-  <div class="version">1.1.0 · Paper 26.3 · Java 25 · Kotlin</div>
+  <div class="version">1.2.0 · Paper 26.3 · Java 25 · Kotlin</div>
   <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="toc">Contents</button>
   <ol id="toc">
     <li class="nav-group">Start</li>
@@ -197,7 +197,7 @@ th { background: var(--panel); }
 
 <span class="k">dependencies</span> {
     compileOnly(<span class="s">"io.papermc.paper:paper-api:26.3.build.252-stable"</span>)
-    compileOnly(<span class="s">"com.aayan:alb-core:1.1.0"</span>)
+    compileOnly(<span class="s">"com.aayan:alb-core:1.2.0"</span>)
     compileOnly(kotlin(<span class="s">"stdlib"</span>))   <span class="c">// ALBCore ships the Kotlin runtime</span>
 }
 
@@ -583,6 +583,8 @@ MessageUtil.broadcast(<span class="s">"&amp;dA boss spawned!"</span>, permission
     .build()
 <span class="k">val</span> head = HeadUtil.fromBase64(texture)        <span class="c">// also fromPlayerName(name), fromPlayer(offlinePlayer)</span></pre>
   <p>Names and lore are not italic by default. Pass a player (<code>name(player, text)</code>) to fill in placeholders. <code>ignoreAlbLore()</code> marks items that ALBLore should leave alone.</p>
+  <h3>Bedrock players</h3>
+  <p><code>BedrockUtil.isBedrock(player)</code> is true for players who joined through Geyser/Floodgate (found by reflection, so neither is a dependency). Send them plain text instead of custom font glyphs, hover text or text displays, which Bedrock cannot show.</p>
   <h3>Numbers</h3>
   <table>
     <tr><th>Call</th><th>Result</th></tr>
