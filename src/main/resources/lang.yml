@@ -41,3 +41,274 @@ chat-input:
   hint: "&8Type &f{word} &8to stop."
   cancelled: "{prefix}&7Cancelled."
   timed-out: "{prefix}&7You took too long, so it was cancelled."
+
+# The shared in-game menu editor (ALBCore MenuEditor), used by every ALB plugin's admin editor.
+# {command} = the full command a custom menu opens with, e.g. /is test.
+menu-editor:
+  title: "&8ᴇᴅɪᴛᴏʀ | ᴍᴇɴᴜꜱ"
+  list-header: "&#7DD3FCMenus"
+  header-lore:
+    - "&7Pick a menu to edit it, or"
+    - "&7make a new one. Files: menus/<name>.yml"
+  menu-name: "&#7DD3FC{id}"
+  menu-lore:
+    - ""
+    - "&8▪ &7{kind}"
+    - "&8▪ &7Rows: &f{rows} &8▪ &7Items: &f{items}"
+    - "&8{file}"
+    - ""
+    - "&#7DD3FC» &fClick &7to edit"
+  kind-built-in: "Plugin menu"
+  kind-custom: "Custom menu &8(&f{command}&8)"
+  kind-theme: "Shared look &8(buttons and filler of every menu)"
+  new-name: "&#7DD3FC+ New menu"
+  new-lore:
+    - "&7Type a name in chat. It also"
+    - "&7becomes its command when it is free."
+  type-menu-id: "{prefix}&7Type the new menu's name (a-z, 0-9, _ -), or &fcancel&7."
+  bad-name: "{prefix}&#F87171✖ &7Use 1-24 characters: a-z, 0-9, _ or -."
+  menu-exists: "{prefix}&#F87171✖ &7A menu called {id} already exists."
+  menu-created: "{prefix}&#4ADE80✔ &7Made menu &f{id}&7. Open it with &f{command}&7."
+  menu-created-no-command: "{prefix}&#4ADE80✔ &7Made menu &f{id}&7. That name is a command already: set another in Menu options."
+  edit-title-edit: "&8✎ {id} &7» rows {from}-{to} of {rows}"
+  edit-title-rearrange: "&8✎ {id} &7» rearrange"
+  edit-title-list: "&8✎ {id} &7» list slots"
+  info-name: "&#7DD3FCEditing: &f{id}"
+  info-edit:
+    - "&7The 4 middle rows show the menu."
+    - "&8▪ &7Click an &fitem &7to edit it"
+    - "&8▪ &7Click an &fempty slot &7to add one"
+    - "&8▪ &7Click a &flist slot &7for list options"
+    - "&8▪ &7Arrows (top / bottom right) scroll"
+  info-rearrange:
+    - "&7Click an item, then the slot it"
+    - "&7goes to. An item there swaps places."
+  info-list:
+    - "&7Click slots to add / remove them"
+    - "&7from the list area (green)."
+  hint-edit: "&7Click an &fitem &7to edit &8| &7an &fempty slot &7to add one"
+  hint-rearrange: "&7Click an item, then where it goes"
+  hint-list: "&7Click slots to add / remove them from the list"
+  options-name: "&#7DD3FCMenu options"
+  options-lore:
+    - "&7Title, rows, filler, command,"
+    - "&7list looks, reset / delete."
+  rearrange-name: "&#7DD3FCRearrange"
+  rearrange-lore:
+    - "&7On: click an item, then the"
+    - "&7slot it goes to (swaps)."
+    - ""
+    - "&#7DD3FC» &fClick &7to toggle"
+  list-mode-name: "&#7DD3FCList slots"
+  list-mode-lore:
+    - "&7Where entries (settings, perms,"
+    - "&7biomes...) appear: {count} slots."
+    - "&7More entries than slots = pages."
+    - ""
+    - "&#7DD3FC» &fClick &7to toggle"
+  up-name: "&#7DD3FC↑ Scroll up"
+  down-name: "&#7DD3FC↓ Scroll down"
+  try-name: "&#7DD3FCTry it"
+  try-lore:
+    - "&7Opens the real menu. Its back"
+    - "&7button returns here."
+  outside: "&8(not part of the menu)"
+  item-info:
+    - ""
+    - "&8slot {slot} ▪ {id} ▪ {permission}"
+  item-hint:
+    - "&#7DD3FC» &fClick &7to edit"
+  item-hint-rearrange:
+    - "&#FBBF24» &fClick &7to pick / drop here"
+  no-actions: "decoration (no actions)"
+  everyone: "everyone"
+  slot-in-list: "&aList slot &8({slot})"
+  slot-not-in-list: "&7Slot {slot}"
+  slot-toggle:
+    - "&#7DD3FC» &fClick &7to switch"
+  list-slot-lore:
+    - ""
+    - "&8list slot {slot} &#7DD3FC» &fClick &7for list options"
+  list-slot-taken: "{prefix}&#F87171✖ &7An item is in that slot. Move it first."
+  empty-name: "&#7DD3FCEmpty slot {slot}"
+  empty-filler-lore:
+    - "&8(filler) &#7DD3FC» &fClick &7to add an item"
+  item-title: "&8ᴇᴅɪᴛᴏʀ | {id} · {item}"
+  item-name: "&#7DD3FCItem"
+  item-lore:
+    - "&7Hold an item and click to use it"
+    - "&7(Nexo items work). Empty hand"
+    - "&7removes a held-item icon."
+  name-name: "&#7DD3FCName"
+  name-lore:
+    - "&8Now: &r{value}"
+    - "&7Click, then type it in chat."
+  lore-name: "&#7DD3FCLore"
+  lore-lore:
+    - "&7Click, then type lines in chat."
+    - "&7'.' = empty line, done, clear, cancel."
+  glow-name: "&#7DD3FCGlow"
+  actions-name: "&#7DD3FCActions"
+  actions-title: "&8ᴇᴅɪᴛᴏʀ | {item} · actions"
+  locked-actions-title: "&8ᴇᴅɪᴛᴏʀ | {item} · locked actions"
+  actions-help:
+    - "&7Run top to bottom on click."
+    - "&7No actions = decoration."
+  action-entry: "&f{n}. &#7DD3FC[{type}]"
+  action-entry-lore:
+    - ""
+    - "&7Left-click: move up &8| &7Right-click: remove"
+  add-action-name: "&#7DD3FC+ Add action"
+  add-action-lore:
+    - "&7Close, back, open a menu, pages,"
+    - "&7commands, message, sound, functions."
+  remove-last-name: "&#F87171Remove last"
+  remove-last-lore:
+    - "&7Removes the bottom action."
+  pick-action-title: "&8ᴇᴅɪᴛᴏʀ | ᴀᴅᴅ ᴀɴ ᴀᴄᴛɪᴏɴ"
+  pick-menu-title: "&8ᴇᴅɪᴛᴏʀ | ᴏᴘᴇɴ ᴡʜɪᴄʜ ᴍᴇɴᴜ?"
+  pick-function-title: "&8ᴇᴅɪᴛᴏʀ | ꜰᴜɴᴄᴛɪᴏɴꜱ"
+  more-functions-name: "&#7DD3FCMore functions"
+  more-functions-lore:
+    - "&7All {count} functions this"
+    - "&7menu can use, on pages."
+    - ""
+    - "&#7DD3FC» &fClick &7to open"
+  function-lore:
+    - "&8[function] {id}"
+    - ""
+    - "&#7DD3FC» &fClick &7to add"
+  type:
+    close-name: "&#7DD3FCClose"
+    close-lore:
+      - "&7Closes the menu."
+    back-name: "&#7DD3FCBack"
+    back-lore:
+      - "&7The menu before (or close)."
+    open-name: "&#7DD3FCOpen menu"
+    open-lore:
+      - "&7Opens another menu."
+    previous-page-name: "&#7DD3FCPrevious page"
+    previous-page-lore:
+      - "&7Hidden on the first page."
+    next-page-name: "&#7DD3FCNext page"
+    next-page-lore:
+      - "&7Hidden on the last page."
+    refresh-name: "&#7DD3FCRefresh"
+    refresh-lore:
+      - "&7Redraws the menu."
+    player-name: "&#7DD3FCPlayer command"
+    player-lore:
+      - "&7The player runs a command."
+      - "&8{player} = their name"
+    player-ask: "{prefix}&7Type the command (without /), e.g. &fwarp shop&7, or &fcancel&7."
+    console-name: "&#7DD3FCConsole command"
+    console-lore:
+      - "&7The console runs a command."
+      - "&8{player} = the clicker"
+    console-ask: "{prefix}&7Type the console command (without /), e.g. &fgive {player} diamond 1&7, or &fcancel&7."
+    message-name: "&#7DD3FCMessage"
+    message-lore:
+      - "&7Sends a chat message."
+      - "&8{{prefix}}, colours and hex work"
+    message-ask: "{prefix}&7Type the message ({{prefix}}, & colours, &#rrggbb), or &fcancel&7."
+    sound-name: "&#7DD3FCSound"
+    sound-lore:
+      - "&7Plays a sound."
+      - "&8e.g. entity.player.levelup 1 1.5"
+    sound-ask: "{prefix}&7Type the sound, volume and pitch, e.g. &fentity.experience_orb.pickup 1 1.2&7, or &fcancel&7."
+  permission-name: "&#7DD3FCPermission"
+  permission-lore:
+    - "&8▪ &7Needs: &f{permission}"
+    - "&8▪ &7Without it: &f{when}"
+  permission-title: "&8ᴇᴅɪᴛᴏʀ | {item} · permission"
+  permission-set-lore:
+    - "&8▪ &7Now: &f{permission}"
+    - "&7Click, then type it (none = everyone)."
+  type-permission: "{prefix}&7Type the permission (e.g. &fskyabyss.vip&7), &fnone &7for everyone, or &fcancel&7."
+  when-locked-name: "&#7DD3FCWithout the permission"
+  locked-hide: "hidden"
+  locked-show: "shows the locked look"
+  locked-preview:
+    - ""
+    - "&8(locked look: players without the permission)"
+  locked-actions-name: "&#7DD3FCLocked actions"
+  copy-look-name: "&#7DD3FCCopy normal look"
+  copy-look-lore:
+    - "&7Start the locked look from"
+    - "&7the normal one."
+  copy-name: "&#7DD3FCCopy item"
+  copy-lore:
+    - "&7Makes a copy in the first"
+    - "&7free slot."
+  copied: "{prefix}&7Copied to slot &f{slot}&7 (use Rearrange to move it)."
+  no-free-slot: "{prefix}&#F87171✖ &7No free slot in this menu."
+  delete-item-name: "&#F87171Delete item"
+  delete-item-lore:
+    - "&7Click twice."
+  confirm: "&4Click again to confirm!"
+  options-title: "&8ᴇᴅɪᴛᴏʀ | {id} · options"
+  title-name: "&#7DD3FCTitle"
+  rows-name: "&#7DD3FCRows: &f{rows}"
+  rows-lore:
+    - "&7Left-click: more &8| &7Right-click: fewer"
+    - "&8Items outside the menu are kept."
+  fill-name: "&#7DD3FCFiller"
+  fill-none: "&8▪ &7Empty slots: &fnothing"
+  fill-edges: "&8▪ &7Empty slots: &fedges only"
+  fill-all: "&8▪ &7Empty slots: &fall"
+  fill-lore:
+    - "&7Filler item: menus/common.yml"
+    - ""
+    - "&#7DD3FC» &fClick &7to change"
+  command-name: "&#7DD3FCCommand"
+  command-lore:
+    - "&8▪ &7Opens with: &f{command}"
+    - "&7Click, then type it (none = off)."
+  type-command: "{prefix}&7Type the command name (e.g. &ftest &7for &f{example}&7), &fnone&7, or &fcancel&7."
+  command-bad-name: "{prefix}&#F87171✖ &7Use 1-24 characters: a-z, 0-9, _ or -."
+  command-taken: "{prefix}&#F87171✖ &7{command} is already a command. Pick another."
+  command-set: "{prefix}&#4ADE80✔ &7This menu now opens with &f{command}&7."
+  list-name: "&#7DD3FCList"
+  list-lore:
+    - "&7Slots, looks and icons"
+    - "&7of the list entries."
+  reset-menu-name: "&#F87171Reset menu"
+  reset-menu-lore:
+    - "&7Back to the plugin's version."
+    - "&7Click twice."
+  delete-menu-name: "&#F87171Delete menu"
+  delete-menu-lore:
+    - "&7Deletes this custom menu."
+    - "&7Click twice."
+  list-title: "&8ᴇᴅɪᴛᴏʀ | {id} · list"
+  slots-name: "&#7DD3FCList slots"
+  slots-lore:
+    - "&7{count} slots. Click, then click"
+    - "&7slots to add or remove them."
+  looks-name: "&#7DD3FCEntry looks"
+  looks-lore:
+    - "&7Name and lore of the {count}"
+    - "&7kinds of entries."
+  looks-title: "&8ᴇᴅɪᴛᴏʀ | {id} · looks"
+  look-title: "&8ᴇᴅɪᴛᴏʀ | {id} · {look}"
+  look-info:
+    - ""
+    - "&8look: {look} &#7DD3FC» &fClick &7to edit"
+  icons-name: "&#7DD3FCEntry icons"
+  icons-lore:
+    - "&7The icon of each of the"
+    - "&7{count} entries."
+  icons-title: "&8ᴇᴅɪᴛᴏʀ | {id} · icons"
+  icon-lore:
+    - "&#7DD3FC» &fHold an item &7and click to use it"
+    - "&#7DD3FC» &fEmpty hand &7puts the default back"
+  common-title: "&8ᴇᴅɪᴛᴏʀ | ᴄᴏᴍᴍᴏɴ"
+  common-lore:
+    - ""
+    - "&8{id} &#7DD3FC» &fClick &7to edit"
+  current: "{prefix}&7Now:"
+  saved: "{prefix}&#4ADE80✔ &7Saved."
+  line-added: "{prefix}&7Line {count} added. More, or &fdone&7."
+  type-text: "{prefix}&7Type the new text in chat (& colours, &#rrggbb), or &fcancel&7."
+  type-lines: "{prefix}&7Type each line in chat ('.' = empty line). &fdone &7saves, &fclear &7empties, &fcancel &7keeps it."

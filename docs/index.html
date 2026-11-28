@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ALBCore Docs</title>
-<meta name="description" content="ALBCore 1.2.0: the base framework for ALB plugins on Paper 26.3 (GUI and YAML menus, lang, chat input, commands, database, player data, hooks, utilities).">
+<meta name="description" content="ALBCore 1.3.0: the base framework for ALB plugins on Paper 26.3 (GUI and YAML menus, lang, chat input, commands, database, player data, hooks, utilities).">
 <style>
 :root {
   --bg: #fbfaf7;
@@ -123,7 +123,7 @@ th { background: var(--panel); }
 <div class="layout">
 <nav class="sidebar" id="sidebar">
   <div class="brand">ALB<span>Core</span></div>
-  <div class="version">1.2.0 · Paper 26.3 · Java 25 · Kotlin</div>
+  <div class="version">1.3.0 · Paper 26.3 · Java 25 · Kotlin</div>
   <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="toc">Contents</button>
   <ol id="toc">
     <li class="nav-group">Start</li>
@@ -197,7 +197,7 @@ th { background: var(--panel); }
 
 <span class="k">dependencies</span> {
     compileOnly(<span class="s">"io.papermc.paper:paper-api:26.3.build.252-stable"</span>)
-    compileOnly(<span class="s">"com.aayan:alb-core:1.2.0"</span>)
+    compileOnly(<span class="s">"com.aayan:alb-core:1.3.0"</span>)
     compileOnly(kotlin(<span class="s">"stdlib"</span>))   <span class="c">// ALBCore ships the Kotlin runtime</span>
 }
 
@@ -474,7 +474,8 @@ menus.opener(<span class="s">"homes"</span>) { player, back -&gt; openHomes(play
     <tr><td><code>[player] &lt;cmd&gt;</code>, <code>[console] &lt;cmd&gt;</code>, <code>[message] &lt;text&gt;</code>, <code>[sound] &lt;key&gt; [volume] [pitch]</code></td><td>Commands, a chat message, a sound. Without a <code>[sound]</code> the theme click sound plays.</td></tr>
   </table>
   <p>Plugins whose menus are only known at run time (add-ons) can route actions themselves: <code>menus.router { player, id, back -&gt; true }</code> is asked first for every <code>[open]</code>, and <code>menus.functionRouter { click, id, back -&gt; true }</code> runs <code>[function]</code> ids that nothing else knows.</p>
-  <p>Placeholders: <code>{player}</code>, <code>{prefix}</code>, <code>{page}</code>, <code>{pages}</code> and the menu's own. A lore line that is only a list placeholder becomes one line per value. <code>item-data: "data:&lt;base64&gt;"</code> keeps an exact item (Nexo items). ALBCore has no in-game menu editor.</p>
+  <p>Placeholders: <code>{player}</code>, <code>{prefix}</code>, <code>{page}</code>, <code>{pages}</code> and the menu's own. A lore line that is only a list placeholder becomes one line per value. <code>item-data: "data:&lt;base64&gt;"</code> keeps an exact item (Nexo items).</p>
+  <p><b>Shared menu editor (1.3.0).</b> <code>MenuEditor.forMenus(plugin, menus, functions = { menuId -&gt; listOf(EditorFunction("toggle-chat", Material.LEVER, "&amp;fToggle chat")) }, exit = { openHub(it) }).list(player)</code> opens the in-game editor every ALB plugin shares: items (from hand), names, lore, glow, actions, permission and locked look, rearrange, list slots, entry looks and icons, title, rows, filler, reset. Changes save to the file at once. <code>MenuEditor(MenuEditorSpec(...))</code> with <code>custom = CustomMenuSupport(...)</code> also lets admins make menus with their own command. The plugin decides who may open it. Texts: <code>lang.yml</code> <code>menu-editor</code>.</p>
 </section>
 
 <section id="lang">
